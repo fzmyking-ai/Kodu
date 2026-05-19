@@ -167,14 +167,14 @@
             <h2>⚙️ Configurações da IA</h2>
             <div class="input-group">
                 <label>Apelido da IA:</label>
-                <input type="text" id="cfg-ia-name" value="Prenda IA">
+                <input type="text" id="cfg-ia-name" value="Modu IA">
             </div>
             <div class="input-group">
                 <label>Seu Apelido:</label>
-                <input type="text" id="cfg-user-name" value="Vivente">
+                <input type="text" id="cfg-user-name" value="Aluno">
             </div>
             <div class="input-group">
-                <label>Comportamento da IA (Prompt Personalizado):</label>
+                <label>Comportamento da IA:</label>
                 <textarea id="cfg-prompt" rows="5">Seja o máximo delicada e educada. Não precisa ser formal, mas apenas fofa. Use sotaque gaúcho clássico (tchê, tri legal, bah). Use emojis fofos de forma equilibrada. Seja humanizada.</textarea>
             </div>
             <div class="modal-actions">
@@ -199,7 +199,7 @@
         
         // Configurações Iniciais Conforme o Solicitado (Fofa/Gaucha)
         const settings = JSON.parse(localStorage.getItem('ia_settings')) || {
-            iaName: "Prenda IA 💖", userName: "Vivente",
+            iaName: "Modu IA", userName: "Aluno",
             customPrompt: "Seja o máximo delicada e educada. Não precisa ser formal, mas apenas fofa. Use sotaque gaúcho clássico (como tchê, tri legal, bah, guri, guria). Use bastante emojis fofos. Seja extremamente humanizada e acolhedora."
         };
 
@@ -263,6 +263,7 @@
                 - Nunca mencione formalmente que está analisando dados. Fale de forma espontânea.
                 - Use formatações básicas em markdown (*negrito*) de forma muito natural e apenas se útil.
                 - Se o usuário pedir códigos ou rascunhos para cópia, ponha entre colchetes [assim] para ativar a caixa copiável.
+                - Use ememojis de forma espontânea, sem exagero.
                 
                 ${getUserDataContext()}`
             };
