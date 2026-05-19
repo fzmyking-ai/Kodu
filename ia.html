@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assistente IA | Painel Modular</title>
+    <style>
+        :root {
+            --primary-color: #3b82f6; --primary-hover: #2563eb; --ia-color: #8b5cf6;
+            --bg-color: #f3f4f6; --card-bg: #ffffff; --block-bg: #f9fafb;
+            --text-main: #1f2937; --text-muted: #6b7280; --border-color: #e5e7eb;
+            --border-radius: 12px; --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #60a5fa; --ia-color: #a78bfa; --bg-color: #0f172a;
+            --card-bg: #1e293b; --block-bg: #334155; --text-main: #f8fafc;
+            --text-muted: #94a3b8; --border-color: #334155; --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding: 20px; transition: background-color 0.3s; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px 24px;
+            background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--border-radius); box-shadow: var(--shadow); gap: 15px;
+        }
+
+        .header-left { display: flex; align-items: center; gap: 15px; }
+        .icon-btn { background: transparent; border: none; color: var(--text-main); font-size: 1.3rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; }
+        .icon-btn:hover { color: var(--ia-color); background: rgba(139, 92, 246, 0.1); }
+        .header-titles h1 { color: var(--ia-color); font-size: 1.3rem; letter-spacing: -0.5px; }
+        .header-titles p { color: var(--text-muted); font-size: 0.8rem; margin-top: 2px; }
+        
+        .header-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .btn { background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 0.9rem; transition: 0.2s; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+        .btn:hover { border-color: var(--primary-color); color: var(--primary-color); background: rgba(59, 130, 246, 0.05); }
+        .btn-new { border-color: var(--ia-color); color: var(--ia-color); }
+        .btn-new:hover { background: rgba(139, 92, 246, 0.1); border-color: var(--ia-color); color: var(--ia-color); }
+
+        .app-container { display: flex; flex-grow: 1; gap: 20px; overflow: hidden; position: relative; }
+
+        /* Sidebar de Histórico */
+        .sidebar { width: 290px; background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--border-radius); display: flex; flex-direction: column; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: var(--shadow); z-index: 90; }
+        .sidebar.hidden { display: none; }
+        .sidebar-header { padding: 18px 15px; border-bottom: 1px solid var(--border-color); font-weight: bold; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; letter-spacing: 0.5px; text-transform: uppercase; }
+        .chat-list { flex-grow: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+        .chat-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-radius: 8px; cursor: pointer; color: var(--text-main); font-size: 0.9rem; background: var(--bg-color); border: 1px solid transparent; transition: 0.2s; gap: 10px; }
+        .chat-item-text { flex-grow: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .chat-item:hover { border-color: var(--ia-color); }
+        .chat-item.active { background: rgba(139, 92, 246, 0.1); border-color: var(--ia-color); color: var(--ia-color); font-weight: 600; }
+        .del-chat-btn { opacity: 0.3; transition: 0.2s; cursor: pointer; padding: 2px 6px; border-radius: 4px; }
+        .del-chat-btn:hover { opacity: 1; background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+
+        /* Modal de Configurações */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(2px); }
+        .modal { background: var(--card-bg); padding: 24px; border-radius: var(--border-radius); width: 90%; max-width: 450px; border: 1px solid var(--border-color); box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 16px; animation: scaleUp 0.2s ease-out; }
+        @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal h2 { color: var(--ia-color); font-size: 1.4rem; display: flex; align-items: center; gap: 8px; }
+        .input-group { display: flex; flex-direction: column; gap: 6px; }
+        .input-group label { font-size: 0.85rem; color: var(--text-muted); font-weight: bold; }
+        .input-group input, .input-group textarea { background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); padding: 11px; border-radius: 8px; outline: none; font-family: inherit; font-size: 0.9rem; transition: 0.2s; }
+        .input-group input:focus, .input-group textarea:focus { border-color: var(--ia-color); }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
+
+        /* Área do Chat */
+        .chat-wrapper { flex-grow: 1; display: flex; flex-direction: column; background-color: var(--card-bg); border-radius: var(--border-radius); border: 1px solid var(--border-color); box-shadow: var(--shadow); overflow: hidden; position: relative; }
+        .chat-history { flex-grow: 1; padding: 24px; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 24px; scroll-behavior: smooth; }
+
+        /* Novo Formato de Mensagem */
+        .msg-wrapper { position: relative; width: 100%; display: flex; flex-direction: column; transition: transform 0.2s ease-out; }
+        .msg-header { font-size: 0.8rem; font-weight: 700; margin-bottom: 5px; color: var(--text-muted); letter-spacing: 0.3px; display: flex; align-items: center; gap: 6px; }
+        .message { max-width: 85%; padding: 14px 18px; border-radius: 12px; line-height: 1.6; font-size: 0.95rem; position: relative; word-wrap: break-word; user-select: text; }
+        
+        .user-wrapper { align-items: flex-end; }
+        .user-wrapper .msg-header { color: var(--primary-color); }
+        .user-message { background-color: var(--primary-color); color: white; border-top-right-radius: 2px; }
+        
+        .ia-wrapper { align-items: flex-start; }
+        .ia-wrapper .msg-header { color: var(--ia-color); }
+        .ia-message { background-color: var(--block-bg); color: var(--text-main); border: 1px solid var(--border-color); border-top-left-radius: 2px; }
+        
+        .typing-cursor::after { content: '▋'; animation: blink 1s step-start infinite; color: var(--ia-color); margin-left: 4px; }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        .msg-actions { display: flex; gap: 14px; font-size: 0.8rem; opacity: 0; transition: opacity 0.2s; margin-top: 5px; padding: 0 4px; }
+        .msg-wrapper:hover .msg-actions { opacity: 1; }
+        .action-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 4px; transition: color 0.2s; }
+        .action-btn:hover { color: var(--ia-color); }
+
+        .message strong { font-weight: 700; } .message em { font-style: italic; } .message del { text-decoration: line-through; opacity: 0.8; }
+        .message blockquote { border-left: 4px solid var(--ia-color); padding-left: 10px; margin: 10px 0; background: rgba(139, 92, 246, 0.05); border-radius: 4px; }
+        .message pre { background: var(--bg-color); padding: 12px; border-radius: 8px; overflow-x: auto; margin: 10px 0; font-family: monospace; border: 1px solid var(--border-color); }
+        .message code { font-family: monospace; background: rgba(0,0,0,0.06); padding: 2px 5px; border-radius: 4px; }
+        [data-theme="dark"] .message code { background: rgba(255,255,255,0.1); }
+        .copy-block { display: inline-flex; align-items: center; gap: 6px; background: var(--bg-color); border: 1px solid var(--ia-color); padding: 4px 10px; border-radius: 20px; cursor: pointer; font-weight: 500; font-size: 0.85rem; color: var(--ia-color); transition: 0.2s; margin: 2px 0; }
+        .copy-block:hover { background: var(--ia-color); color: white; }
+
+        .pinned-area { display: none; background: var(--block-bg); border-top: 1px solid var(--border-color); padding: 12px 20px; font-size: 0.85rem; border-left: 4px solid var(--ia-color); position: relative; }
+        .pinned-area span { display: block; color: var(--text-muted); margin-bottom: 4px; font-weight: bold; }
+        .pinned-text-content { color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 20px; }
+        .close-pin { position: absolute; right: 15px; top: 15px; cursor: pointer; color: var(--text-muted); background: none; border: none; font-size: 1rem; }
+
+        .chat-input-area { padding: 20px; background-color: var(--card-bg); border-top: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 8px; }
+        .input-row { display: flex; gap: 12px; align-items: flex-end; width: 100%; }
+        textarea { flex-grow: 1; background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); padding: 14px; border-radius: 8px; font-size: 0.95rem; outline: none; resize: none; min-height: 50px; max-height: 160px; transition: border-color 0.2s; line-height: 1.5; }
+        textarea:focus { border-color: var(--ia-color); }
+        .btn-send { background: var(--ia-color); color: white; border: none; padding: 14px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; height: 50px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .btn-send:hover:not(:disabled) { background: #7c3aed; }
+        .btn-send:disabled { background: var(--text-muted); cursor: not-allowed; opacity: 0.5; }
+        .input-tip { font-size: 0.75rem; color: var(--text-muted); padding-left: 2px; }
+
+        @media (max-width: 768px) {
+            .sidebar { position: absolute; left: 0; top: 0; height: 100%; transform: translateX(-110%); }
+            .sidebar.active { transform: translateX(0); display: flex; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <button class="icon-btn" id="menu-toggle" title="Menu de Chats">☰</button>
+            <div class="header-titles">
+                <h1 id="header-ia-name">✨ Assistente IA</h1>
+                <p>Converse com seus dados</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <a href="index.html" class="btn" title="Voltar ao Painel">⬅️ Painel</a>
+            <button id="settings-btn" class="icon-btn" title="Configurações">⚙️</button>
+            <button id="theme-toggle" class="btn">☀️ Light</button>
+            <button id="new-chat-btn" class="btn btn-new">🔄 Novo Chat</button>
+        </div>
+    </header>
+
+    <div class="app-container">
+        <div class="sidebar hidden" id="sidebar">
+            <div class="sidebar-header">
+                Histórico de Chats
+                <button class="icon-btn" style="font-size: 1rem; width:30px; height:30px;" id="close-sidebar">✖</button>
+            </div>
+            <div class="chat-list" id="chat-list"></div>
+        </div>
+
+        <div class="chat-wrapper">
+            <div class="chat-history" id="chat-history"></div>
+            
+            <div class="pinned-area" id="pinned-area">
+                <span>📌 Respondendo a:</span>
+                <div class="pinned-text-content" id="pinned-text"></div>
+                <button class="close-pin" onclick="clearPin()">✖</button>
+            </div>
+
+            <div class="chat-input-area">
+                <div class="input-row">
+                    <textarea id="user-input" placeholder="Pergunte algo... (Arraste uma mensagem para fixar)" rows="1"></textarea>
+                    <button class="btn-send" id="send-btn">Enviar</button>
+                </div>
+                <div class="input-tip">Dica: Pressione <b>Enter</b> para pular linha e <b>Ctrl + Enter</b> para enviar.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal">
+            <h2>⚙️ Configurações da IA</h2>
+            <div class="input-group">
+                <label>Apelido da IA:</label>
+                <input type="text" id="cfg-ia-name" value="Prenda IA">
+            </div>
+            <div class="input-group">
+                <label>Seu Apelido:</label>
+                <input type="text" id="cfg-user-name" value="Vivente">
+            </div>
+            <div class="input-group">
+                <label>Comportamento da IA (Prompt Personalizado):</label>
+                <textarea id="cfg-prompt" rows="5">Seja o máximo delicada e educada. Não precisa ser formal, mas apenas fofa. Use sotaque gaúcho clássico (tchê, tri legal, bah). Use emojis fofos de forma equilibrada. Seja humanizada.</textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn" id="close-modal-btn">Cancelar</button>
+                <button class="btn btn-new" id="save-settings-btn">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. CONFIGURAÇÕES GERAIS E API ---
+        const API_KEY = "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"; // ⚠️ ATUALIZE AQUI SUA CHAVE GROQ
+        let IS_GENERATING = false;
+
+        const chatHistoryDOM = document.getElementById('chat-history');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const pinnedArea = document.getElementById('pinned-area');
+        const pinnedTextDiv = document.getElementById('pinned-text');
+        const sidebar = document.getElementById('sidebar');
+        const modal = document.getElementById('settings-modal');
+        
+        // Configurações Iniciais Conforme o Solicitado (Fofa/Gaucha)
+        const settings = JSON.parse(localStorage.getItem('ia_settings')) || {
+            iaName: "Prenda IA 💖", userName: "Vivente",
+            customPrompt: "Seja o máximo delicada e educada. Não precisa ser formal, mas apenas fofa. Use sotaque gaúcho clássico (como tchê, tri legal, bah, guri, guria). Use bastante emojis fofos. Seja extremamente humanizada e acolhedora."
+        };
+
+        let allChats = JSON.parse(localStorage.getItem('ia_chats_db_v3')) || {};
+        let currentChatId = localStorage.getItem('ia_current_chat_v3') || null;
+        let messagesContext = [];
+        let pinnedMessageContext = ""; 
+
+        // --- 2. CONFIGURAÇÕES VISUAIS & UTILS ---
+        const htmlElement = document.documentElement;
+        document.getElementById('theme-toggle').addEventListener('click', (e) => {
+            const target = htmlElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            htmlElement.setAttribute('data-theme', target);
+            e.target.textContent = target === 'dark' ? '☀️ Light' : '🌙 Dark';
+        });
+
+        document.getElementById('menu-toggle').addEventListener('click', () => { sidebar.classList.toggle('hidden'); sidebar.classList.toggle('active'); });
+        document.getElementById('close-sidebar').addEventListener('click', () => { sidebar.classList.add('hidden'); sidebar.classList.remove('active'); });
+
+        document.getElementById('settings-btn').addEventListener('click', () => {
+            document.getElementById('cfg-ia-name').value = settings.iaName;
+            document.getElementById('cfg-user-name').value = settings.userName;
+            document.getElementById('cfg-prompt').value = settings.customPrompt;
+            modal.style.display = 'flex';
+        });
+        document.getElementById('close-modal-btn').addEventListener('click', () => modal.style.display = 'none');
+        document.getElementById('save-settings-btn').addEventListener('click', () => {
+            settings.iaName = document.getElementById('cfg-ia-name').value || "Prenda IA 💖";
+            settings.userName = document.getElementById('cfg-user-name').value || "Vivente";
+            settings.customPrompt = document.getElementById('cfg-prompt').value;
+            localStorage.setItem('ia_settings', JSON.stringify(settings));
+            document.getElementById('header-ia-name').textContent = `✨ ${settings.iaName}`;
+            modal.style.display = 'none';
+            buildSystemPrompt();
+            loadChat(currentChatId);
+        });
+        document.getElementById('header-ia-name').textContent = `✨ ${settings.iaName}`;
+
+        // --- 3. PROMPT DO SISTEMA & DADOS DO PAINEL ---
+        function getUserDataContext() {
+            try {
+                const data = JSON.parse(localStorage.getItem('painel_modular_v2'));
+                if (!data || Object.keys(data).length === 0) return "";
+                let context = "Contexto Interno do Vivente:\n";
+                for (const [cat, grupos] of Object.entries(data)) {
+                    context += `[${cat}]\n`;
+                    grupos.forEach(g => g.forEach(b => { if(b.type !== 'imagem' && b.value) context += `- ${b.type}: ${b.value}\n`; }));
+                }
+                return context;
+            } catch(e) { return ""; }
+        }
+
+        let systemPrompt = {};
+        function buildSystemPrompt() {
+            systemPrompt = {
+                role: "system",
+                content: `Você é uma assistente virtual. Seu nome é ${settings.iaName} e você conversa com o usuário chamado ${settings.userName}. 
+                ${settings.customPrompt}
+                
+                REGRAS:
+                - Nunca mencione formalmente que está analisando dados. Fale de forma espontânea.
+                - Use formatações básicas em markdown (*negrito*) de forma muito natural e apenas se útil.
+                - Se o usuário pedir códigos ou rascunhos para cópia, ponha entre colchetes [assim] para ativar a caixa copiável.
+                
+                ${getUserDataContext()}`
+            };
+            if(messagesContext.length > 0) messagesContext[0] = systemPrompt;
+        }
+
+        // --- 4. FLUXO DE COMPORTAMENTO DOS MÚLTIPLOS CHATS ---
+        function generateId() { return 'chat_' + Math.random().toString(36).substr(2, 9); }
+        
+        function createNewChat() {
+            if(IS_GENERATING) return;
+            const newId = generateId();
+            allChats[newId] = { title: "Novo Chat ✨", messages: [] };
+            localStorage.setItem('ia_chats_db_v3', JSON.stringify(allChats));
+            currentChatId = newId;
+            localStorage.setItem('ia_current_chat_v3', currentChatId);
+            loadChat(newId);
+            renderChatList();
+        }
+
+        function saveDB() {
+            if(currentChatId && allChats[currentChatId]) {
+                allChats[currentChatId].messages = messagesContext.filter(m => m.role !== 'system');
+                if(allChats[currentChatId].messages.length > 0 && (allChats[currentChatId].title === "Novo Chat ✨" || allChats[currentChatId].title.startsWith("Novo Chat"))) {
+                    const firstMsg = allChats[currentChatId].messages[0].content;
+                    allChats[currentChatId].title = firstMsg.replace(/\(Referenciando:.*?\)\n\n/, "").substring(0, 24) + "...";
+                }
+            }
+            localStorage.setItem('ia_chats_db_v3', JSON.stringify(allChats));
+            localStorage.setItem('ia_current_chat_v3', currentChatId);
+            renderChatList();
+        }
+
+        function loadChat(chatId) {
+            if(!chatId || !allChats[chatId]) return;
+            currentChatId = chatId;
+            localStorage.setItem('ia_current_chat_v3', currentChatId);
+            chatHistoryDOM.innerHTML = '';
+            buildSystemPrompt();
+            messagesContext = [systemPrompt];
+            
+            const savedMsgs = allChats[chatId].messages || [];
+            if (savedMsgs.length === 0) {
+                const welcomeMsg = `Oi, ${settings.userName}! Sou a ${settings.iaName} 🥰. Que bom te ver por aqui, tchê! Como posso te ajudar no dia de hoje?`;
+                messagesContext.push({ role: "assistant", content: welcomeMsg });
+                renderMessage(welcomeMsg, false, 1);
+            } else {
+                savedMsgs.forEach((msg, index) => {
+                    messagesContext.push(msg);
+                    renderMessage(msg.content, msg.role === 'user', index + 1);
+                });
+            }
+            renderChatList();
+            scrollToBottom();
+            if(window.innerWidth <= 768) sidebar.classList.remove('active');
+        }
+
+        function renderChatList() {
+            const listDOM = document.getElementById('chat-list');
+            listDOM.innerHTML = '';
+            const keys = Object.keys(allChats);
+            
+            if(keys.length === 0) {
+                listDOM.innerHTML = '<div style="padding:10px; color:var(--text-muted); font-size:0.85rem; text-align:center;">Nenhum chat ativo</div>';
+                return;
+            }
+
+            keys.reverse().forEach(id => {
+                const item = allChats[id];
+                if(!item) return;
+
+                const div = document.createElement('div');
+                div.className = `chat-item ${id === currentChatId ? 'active' : ''}`;
+                
+                const txtSpan = document.createElement('span');
+                txtSpan.className = 'chat-item-text';
+                txtSpan.textContent = item.title || "Chat sem título";
+                txtSpan.onclick = () => { if(!IS_GENERATING) loadChat(id); };
+                div.appendChild(txtSpan);
+                
+                const delBtn = document.createElement('span');
+                delBtn.className = 'del-chat-btn';
+                delBtn.innerHTML = '🗑️';
+                delBtn.title = "Excluir Chat";
+                delBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    if(IS_GENERATING) return;
+                    if(confirm('Deseja apagar este histórico de chat, vivente?')) {
+                        delete allChats[id];
+                        localStorage.setItem('ia_chats_db_v3', JSON.stringify(allChats));
+                        const remainingKeys = Object.keys(allChats);
+                        if(currentChatId === id) {
+                            currentChatId = remainingKeys.length > 0 ? remainingKeys[remainingKeys.length - 1] : null;
+                            localStorage.setItem('ia_current_chat_v3', currentChatId);
+                        }
+                        if(!currentChatId) { createNewChat(); } else { loadChat(currentChatId); }
+                    }
+                };
+                div.appendChild(delBtn);
+                listDOM.appendChild(div);
+            });
+        }
+
+        // --- 5. PARSER DE RENDERIZAÇÃO E FORMATAÇÃO ---
+        function parseMarkdown(text) {
+            let cleanText = text.replace(/\(Referenciando:.*?\)\n\n/, ""); // Limpa visualizadores internos
+            let html = cleanText.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
+            html = html.replace(/_(.*?)_/g, '<em>$1</em>');
+            html = html.replace(/~~(.*?)~~/g, '<del>$1</del>');
+            html = html.replace(/^&gt; (.*?)$/gm, '<blockquote>$1</blockquote>');
+            html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+            html = html.replace(/\[(.*?)\]/g, `<span class="copy-block" onclick="copySpecificText('$1', this)">$1 📋</span>`);
+            return html.replace(/\n/g, '<br>');
+        }
+
+        window.copySpecificText = function(text, element) {
+            navigator.clipboard.writeText(text);
+            const originalHtml = element.innerHTML;
+            element.innerHTML = "Copiado! ✅";
+            setTimeout(() => element.innerHTML = originalHtml, 2000);
+        }
+
+        function renderMessage(text, isUser, contextIndex, isStreaming = false) {
+            const wrapper = document.createElement('div');
+            wrapper.className = `msg-wrapper ${isUser ? 'user-wrapper' : 'ia-wrapper'}`;
+            wrapper.dataset.index = contextIndex;
+
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'msg-header';
+            headerDiv.innerHTML = isUser ? `👤 Você` : `✨ ${settings.iaName}`;
+            wrapper.appendChild(headerDiv);
+
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${isUser ? 'user-message' : 'ia-message'}`;
+            if(isStreaming) msgDiv.classList.add('typing-cursor');
+            msgDiv.innerHTML = parseMarkdown(text);
+            wrapper.appendChild(msgDiv);
+            
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'msg-actions';
+
+            if(!isStreaming) {
+                const pinBtn = document.createElement('button');
+                pinBtn.className = 'action-btn';
+                pinBtn.innerHTML = '📌 Fixar';
+                pinBtn.onclick = () => pinText(text);
+                actionsDiv.appendChild(pinBtn);
+
+                if (isUser) {
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'action-btn';
+                    editBtn.innerHTML = '✏️ Editar';
+                    editBtn.onclick = () => { if(!IS_GENERATING) editMessage(contextIndex, text); };
+                    actionsDiv.appendChild(editBtn);
+                } else {
+                    const copyBtn = document.createElement('button');
+                    copyBtn.className = 'action-btn';
+                    copyBtn.innerHTML = '📋 Copiar';
+                    copyBtn.onclick = () => {
+                        navigator.clipboard.writeText(text.replace(/\(Referenciando:.*?\)\n\n/, ""));
+                        copyBtn.innerHTML = '✅ Copiado'; setTimeout(() => copyBtn.innerHTML = '📋 Copiar', 2000);
+                    };
+                    actionsDiv.appendChild(copyBtn);
+
+                    // Botão Regenerar Resposta
+                    const regenBtn = document.createElement('button');
+                    regenBtn.className = 'action-btn';
+                    regenBtn.innerHTML = '🔄 Refazer';
+                    regenBtn.onclick = () => { if(!IS_GENERATING) regenerateResponse(contextIndex); };
+                    actionsDiv.appendChild(regenBtn);
+                }
+                setupSwipeToPin(wrapper, text);
+            }
+
+            wrapper.appendChild(actionsDiv);
+            chatHistoryDOM.appendChild(wrapper);
+            return msgDiv;
+        }
+
+        function scrollToBottom() { chatHistoryDOM.scrollTop = chatHistoryDOM.scrollHeight; }
+
+        function pinText(text) {
+            let clean = text.replace(/\(Referenciando:.*?\)\n\n/, "");
+            pinnedMessageContext = clean;
+            pinnedTextDiv.textContent = clean;
+            pinnedArea.style.display = 'block';
+            userInput.focus();
+        }
+        function clearPin() { pinnedMessageContext = ""; pinnedArea.style.display = 'none'; }
+
+        function editMessage(index, text) {
+            userInput.value = text.replace(/\(Referenciando:.*?\)\n\n/, "");
+            messagesContext = messagesContext.slice(0, index);
+            saveDB(); loadChat(currentChatId); userInput.focus();
+        }
+
+        // --- 6. GESTOS (ARRASTAR) ---
+        function setupSwipeToPin(element, text) {
+            let startX = 0, isDragging = false;
+            const start = e => { startX = e.touches ? e.touches[0].clientX : e.clientX; isDragging = true; };
+            const move = e => { if(!isDragging) return; const currentX = e.touches ? e.touches[0].clientX : e.clientX; const diffX = currentX - startX; if(diffX > 10 && diffX < 80) element.style.transform = `translateX(${diffX}px)`; };
+            const end = () => { if(!isDragging) return; isDragging = false; element.style.transition = 'transform 0.2s ease-out'; const matrix = element.style.transform.match(/translateX\((.*?)px\)/); if(matrix && parseFloat(matrix[1]) > 45) pinText(text); element.style.transform = `translateX(0px)`; };
+            
+            element.addEventListener('touchstart', start, {passive:true}); element.addEventListener('touchmove', move, {passive:true}); element.addEventListener('touchend', end);
+            element.addEventListener('mousedown', start); window.addEventListener('mousemove', move); window.addEventListener('mouseup', end);
+        }
+
+        // --- 7. MOTOR DE PROCESSAMENTO E CONEXÃO STREAMING ---
+        async function sendMessage() {
+            if(IS_GENERATING) return;
+            let text = userInput.value.trim();
+            if (!text) return;
+
+            let promptToSend = text;
+            if (pinnedMessageContext) { promptToSend = `(Referenciando: "${pinnedMessageContext}")\n\n${text}`; clearPin(); }
+
+            const contextIndex = messagesContext.length;
+            messagesContext.push({ role: "user", content: promptToSend });
+            renderMessage(text, true, contextIndex);
+            
+            userInput.value = ''; userInput.style.height = 'auto';
+            sendBtn.disabled = true; sendBtn.textContent = '⏳';
+            IS_GENERATING = true;
+            scrollToBottom();
+
+            await executeAiCall();
+        }
+
+        async function regenerateResponse(index) {
+            if(IS_GENERATING) return;
+            // Corta o contexto na mensagem da IA anterior
+            messagesContext = messagesContext.slice(0, index);
+            
+            // Limpa os elementos visuais antigos a partir daquele ponto
+            while(chatHistoryDOM.children.length > index - 1) {
+                chatHistoryDOM.removeChild(chatHistoryDOM.lastChild);
+            }
+
+            sendBtn.disabled = true; sendBtn.textContent = '⏳';
+            IS_GENERATING = true;
+            await executeAiCall();
+        }
+
+        async function executeAiCall() {
+            const responseIndex = messagesContext.length;
+            const iaMessageDOM = renderMessage("", false, responseIndex, true);
+            let fullResponse = "";
+
+            try {
+                const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                    method: "POST",
+                    headers: { "Authorization": `Bearer ${API_KEY}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        model: "llama-3.3-70b-versatile",
+                        messages: messagesContext,
+                        temperature: 0.8,
+                        stream: true
+                    })
+                });
+
+                if (!response.ok) throw new Error("Problema na resposta do servidor.");
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    
+                    const chunk = decoder.decode(value, { stream: true });
+                    const lines = chunk.split('\n');
+                    
+                    for (const line of lines) {
+                        if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+                            try {
+                                const data = JSON.parse(line.substring(6));
+                                const delta = data.choices[0].delta.content;
+                                if (delta) {
+                                    fullResponse += delta;
+                                    iaMessageDOM.innerHTML = parseMarkdown(fullResponse);
+                                    scrollToBottom();
+                                }
+                            } catch (e) {}
+                        }
+                    }
+                }
+
+                iaMessageDOM.classList.remove('typing-cursor');
+                messagesContext.push({ role: "assistant", content: fullResponse });
+                saveDB();
+
+                // Recria o elemento para fixar as ações funcionais (Copiar, Refazer, etc.)
+                if(iaMessageDOM.parentNode) chatHistoryDOM.removeChild(iaMessageDOM.parentNode);
+                renderMessage(fullResponse, false, responseIndex);
+
+            } catch (error) {
+                iaMessageDOM.classList.remove('typing-cursor');
+                iaMessageDOM.innerHTML = `⚠️ Bah, deu um erro aqui vivente: ${error.message}. Dá uma olhada na tua chave de API!`;
+            } finally {
+                IS_GENERATING = false;
+                sendBtn.disabled = false; sendBtn.textContent = 'Enviar';
+                scrollToBottom(); userInput.focus();
+            }
+        }
+
+        // --- 8. EVENTOS DE INICIALIZAÇÃO ---
+        document.getElementById('new-chat-btn').addEventListener('click', createNewChat);
+        sendBtn.addEventListener('click', sendMessage);
+        
+        // Correção de Evento: Enter pula linha, Ctrl+Enter envia
+        userInput.addEventListener('keydown', (e) => { 
+            if (e.key === 'Enter') {
+                if (e.ctrlKey || e.metaKey) {
+                    e.preventDefault(); 
+                    sendMessage(); 
+                }
+                // Enter sozinho pula a linha por padrão do textarea
+            }
+        });
+        
+        userInput.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
+
+        function initApp() {
+            if(!currentChatId || !allChats[currentChatId]) { 
+                const keys = Object.keys(allChats);
+                if(keys.length > 0) { loadChat(keys[keys.length - 1]); } else { createNewChat(); }
+            } else { 
+                loadChat(currentChatId); 
+            }
+        }
+
+        initApp();
+    </script>
+</body>
+</html>
+
