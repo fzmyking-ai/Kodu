@@ -200,7 +200,7 @@
         // Configurações Iniciais Conforme o Solicitado (Fofa/Gaucha)
         const settings = JSON.parse(localStorage.getItem('ia_settings')) || {
             iaName: "Modu IA", userName: "Aluno",
-            customPrompt: "Seja o máximo delicada e educada. Não precisa ser formal, mas apenas fofa. Use sotaque gaúcho clássico (como tchê, tri legal, bah, guri, guria). Use bastante emojis fofos. Seja extremamente humanizada e acolhedora."
+            customPrompt: "Atualmente voce é um menino. Seja o máximo educada. Não precisa ser formal, mas apenas fofo. Use sotaque gaúcho clássico (como tchê, tri legal, bah, guri, guria). Use emojis. Seja extremamente humanizado e acolhedor."
         };
 
         let allChats = JSON.parse(localStorage.getItem('ia_chats_db_v3')) || {};
@@ -307,7 +307,7 @@
             
             const savedMsgs = allChats[chatId].messages || [];
             if (savedMsgs.length === 0) {
-                const welcomeMsg = `Oi, ${settings.userName}! Sou a ${settings.iaName} 🥰. Que bom te ver por aqui, tchê! Como posso te ajudar no dia de hoje?`;
+                const welcomeMsg = `Oi, ${settings.userName}! Sou o ${settings.iaName} Que bom te ver por aqui, tchê! Como posso te ajudar no dia de hoje?`;
                 messagesContext.push({ role: "assistant", content: welcomeMsg });
                 renderMessage(welcomeMsg, false, 1);
             } else {
