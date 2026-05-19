@@ -53,6 +53,7 @@
             color: var(--text-main); padding: 8px 16px; border-radius: 8px;
             cursor: pointer; font-weight: 500; transition: all 0.2s; font-size: 0.9rem;
             display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+            text-decoration: none; /* Garante que os links em formato de botão não tenham sublinhado */
         }
         .btn:hover { border-color: var(--primary-color); color: var(--primary-color); transform: translateY(-1px); }
         .btn-primary { background: var(--primary-color); color: white; border-color: var(--primary-color); }
@@ -151,6 +152,7 @@
             <a href="tutorial.html" target="_self" class="btn btn-icon" title="Abrir Tutorial">❓</a>
             
             <button id="theme-toggle" class="btn">☀️ Light</button>
+            <a href="ia.html" class="btn">💬 Assistente IA</a>
             <button id="edit-toggle" class="btn btn-primary">✏️ Editar Modelo</button>
         </div>
     </header>
