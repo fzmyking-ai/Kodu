@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tutorial | Painel & IA</title>
+    <style>
+        :root {
+            /* Cores Globais do Novo Design */
+            --primary-color: #3b82f6; 
+            --primary-hover: #2563eb; 
+            --ia-color: #8b5cf6;
+            --bg-color: #f3f4f6; 
+            --card-bg: #ffffff; 
+            --block-bg: #f9fafb;
+            --text-main: #1f2937; 
+            --text-muted: #6b7280; 
+            --border-color: #e5e7eb;
+            --border-radius: 12px; 
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            
+            /* Cores de destaque específicas do tutorial */
+            --accent-green: #10b981;
+            --accent-purple: #8b5cf6;
+            --accent-orange: #f59e0b;
+            --accent-pink: #f472b6;
+            --accent-cyan: #22d3ee;
+            --accent-gray: #94a3b8;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #60a5fa; 
+            --ia-color: #a78bfa; 
+            --bg-color: #0f172a;
+            --card-bg: #1e293b; 
+            --block-bg: #334155; 
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8; 
+            --border-color: #334155; 
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            
+            --accent-green: #34d399;
+            --accent-purple: #a78bfa;
+            --accent-orange: #fbbf24;
+            --accent-pink: #f472b6;
+            --accent-cyan: #22d3ee;
+            --accent-gray: #94a3b8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; }
+
+        body { 
+            background-color: var(--bg-color); 
+            color: var(--text-main); 
+            line-height: 1.6;
+            padding: 15px;
+            transition: background-color 0.3s, color 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Novo Cabeçalho Baseado no Painel IA */
+        header {
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 12px 20px; margin-bottom: 30px;
+            background-color: var(--card-bg); 
+            border: 1px solid var(--border-color); 
+            border-radius: var(--border-radius); 
+            box-shadow: var(--shadow); 
+            gap: 10px;
+            width: 100%;
+            max-width: 700px;
+        }
+
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .icon-btn { background: transparent; border: none; color: var(--text-main); font-size: 1.3rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; text-decoration: none; }
+        .icon-btn:hover { color: var(--primary-color); background: rgba(59, 130, 246, 0.1); }
+        .header-titles h1 { color: var(--primary-color); font-size: 1.2rem; letter-spacing: -0.5px; white-space: nowrap; }
+        .header-titles p { color: var(--text-muted); font-size: 0.75rem; margin-top: 2px; }
+        
+        .header-actions { display: flex; gap: 8px; align-items: center; }
+        .btn { background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 0.9rem; transition: 0.2s; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; }
+        .btn:hover { border-color: var(--primary-color); color: var(--primary-color); background: rgba(59, 130, 246, 0.05); }
+
+        /* Container Principal do Tutorial */
+        .tutorial-container {
+            max-width: 700px;
+            width: 100%;
+            padding-bottom: 40px;
+        }
+
+        /* Títulos de Seção */
+        .section-title {
+            text-align: center;
+            margin: 40px 0 25px 0;
+            padding-bottom: 15px;
+            border-bottom: 2px dashed var(--border-color);
+        }
+
+        .section-title h2 {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .section-title.ia-section h2 {
+            color: var(--ia-color);
+        }
+
+        .section-title p {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+        }
+
+        /* Estrutura dos Cards */
+        .step-card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 24px 30px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            border-left: 6px solid var(--primary-color);
+            transition: transform 0.2s;
+        }
+
+        .step-card:hover { transform: translateY(-2px); }
+
+        /* Variações de Cores dos Cards */
+        .card-pink { border-left-color: var(--accent-pink); }
+        .card-primary { border-left-color: var(--primary-color); }
+        .card-green { border-left-color: var(--accent-green); }
+        .card-purple { border-left-color: var(--accent-purple); }
+        .card-orange { border-left-color: var(--accent-orange); }
+        .card-cyan { border-left-color: var(--accent-cyan); }
+        .card-gray { border-left-color: var(--accent-gray); }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .icon-box {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            background-color: var(--bg-color);
+        }
+
+        .step-card h3 { font-size: 1.2rem; color: var(--text-main); }
+
+        /* Estrutura Interna Padronizada */
+        .info-section { margin-bottom: 15px; }
+        .info-section:last-child { margin-bottom: 0; }
+        
+        .info-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .info-text { color: var(--text-muted); font-size: 0.95rem; }
+
+        /* Cores de Texto Dinâmicas */
+        .text-pink { color: var(--accent-pink); }
+        .text-primary { color: var(--primary-color); }
+        .text-green { color: var(--accent-green); }
+        .text-purple { color: var(--accent-purple); }
+        .text-orange { color: var(--accent-orange); }
+        .text-cyan { color: var(--accent-cyan); }
+        .text-gray { color: var(--accent-gray); }
+
+        .highlight {
+            background-color: var(--bg-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: 1px solid var(--border-color);
+        }
+        
+        .highlight.ia {
+            color: var(--ia-color);
+        }
+
+        .bottom-actions {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 15px;
+        }
+
+        .btn-new { 
+            border-color: var(--primary-color); 
+            color: var(--primary-color); 
+            padding: 12px 24px;
+            font-size: 1rem;
+        }
+        .btn-new:hover { 
+            background: rgba(59, 130, 246, 0.1); 
+            border-color: var(--primary-color); 
+        }
+
+        .btn-ia {
+            border-color: var(--ia-color); 
+            color: var(--ia-color); 
+            padding: 12px 24px;
+            font-size: 1rem;
+        }
+        .btn-ia:hover {
+            background: rgba(139, 92, 246, 0.1); 
+            border-color: var(--ia-color); 
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+
+
+
+            <div class="header-titles">
+                <h1>Guias e Tutoriais</h1>
+                <p>Aprenda a usar todas as ferramentas</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button id="theme-toggle" class="btn icon-btn" title="Mudar Tema">☀️</button>
+        </div>
+    </header>
+
+    <div class="tutorial-container">
+        
+        <div class="section-title">
+            <h2>Bem-vindo ao Modu 👋</h2>
+            <p>Aprenda a organizar seus trabalhos escolares em poucos passos de forma simples e fluida.</p>
+        </div>
+
+        <div class="step-card card-pink">
+            <div class="step-header">
+                <div class="icon-box text-pink">🏫</div>
+                <h3>O Fluxo Ideal de Uso</h3>
+            </div>
+            
+            <div class="info-section">
+                <p class="info-title text-pink">O que é?</p>
+                <p class="info-text">É o método recomendado para garantir que você nunca mais esqueça um trabalho ou prova importante.</p>
+            </div>
+
+            <div class="info-section">
+                <p class="info-title text-purple">Para que serve?</p>
+                <p class="info-text">Serve para transformar a bagunça de anotações soltas em um sistema claro, mantendo seus prazos organizados num só lugar.</p>
+            </div>
+
+            <div class="info-section">
+                <p class="info-title text-primary">Como usar?</p>
+                <div class="info-text" style="margin-top: 5px;">
+                    <ol style="padding-left: 20px;">
+                        <li><b>Anotação Rápida:</b> Na aula, anote o nome do trabalho no caderno.</li>
+                        <li><b>Transferência:</b> Em casa, abra o <span class="highlight">Modu</span> e crie um novo grupo.</li>
+                        <li><b>Detalhamento:</b> Adicione a <b>Data</b> para ativar alertas e <b>Tópicos</b> para listar suas tarefas.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <div class="step-card card-primary">
+            <div class="step-header">
+                <div class="icon-box text-primary">✏️</div>
+                <h3>Modo de Edição</h3>
+            </div>
+            
+            <div class="info-section">
+                <p class="info-title text-primary">O que é?</p>
+                <p class="info-text">É a chave de controle do seu painel, alternando entre a visão de leitura e a visão de modificação.</p>
+            </div>
+
+            <div class="info-section">
+                <p class="info-title text-orange">Para que serve?</p>
+                <p class="info-text">Serve para permitir que você crie categorias, adicione novos trabalhos e preencha os blocos sem poluir a tela quando quiser apenas visualizar.</p>
+            </div>
+
+            <div class="info-section">
+                <p class="info-title text-green">Como usar?</p>
+                <p class="info-text">Clique no botão azul <span class="highlight">✏️ Editar Modelo</span> no topo da página. Faça suas alterações e, quando terminar, clique novamente em <span class="highlight">💾 Salvar Tudo</span>.</p>
+            </div>
+        </div>
+
+        <div class="step-card card-primary">
+            <div class="step-header">
+                <div class="icon-box text-primary">📌</div>
+                <h3>Bloco de Título</h3>
+            </div>
+            
+            <div class="info-section">
+                <p class="info-title text-primary">O que é?</p>
+                <p class="info-text">É a "manchete" do seu grupo. O elemento visual mais forte que define o assunto principal.</p>
+            </div>
+
+            <div class="info-section">
+                <p class="info-title text-purple">Para que serve?</p>
+                <p class="info-text">Serve para separar seus projetos de forma clara. Sem um título, as informações ficam soltas e difíceis de encontrar batendo o olho.</p>
+            </div>
+
+            <div class="info-section">
+                <p class="info-title text-green">Como usar?</p>
+                <p class="info-text">No modo edição, clique em <span class="highlight">+ Título</span>. Digite algo curto e direto, como <i>"Trabalho de História"</i> ou <i>"Pesquisa de Biologia"</i>.</p>
+            </div>
+        </div>
+
+        <div class="step-card card-green">
+            <div class="step-header">
+                <div class="icon-box text-green">📅</div>
+                <h3>Bloco de Data</h3>
+            </div>
+            
+            <div class="info-section">
+                <p class="info-title text-green">O que é?</p>
+                <p class="info-text">É o cronômetro do seu bloco. Um campo inteligente que reconhece prazos e datas de entrega.</p>
+            </div>
+
+            <div class="info-section">
+                <p class="info-title text-orange">Para que serve?</p>
+                <p class="info-text">Serve para gerar um <b>senso de urgência</b>. Quando uma data está chegando (hoje ou amanhã), o Modu exibe um banner de alerta no topo para você não perder o prazo.</p>
+            </div>
+
+            <div class="info-section">
+                <p class="info-title text-primary">Como usar?</p>
+                <p class="info-text">Clique em <span class="highlight">+ Data</span>. Basta digitar os números (ex: 1505) e o sistema formatará automaticamente para <span class="highlight">15/05</span>. <i>Dica: use sempre o formato Dia/Mês.</i></p>
+            </div>
+        </div>
+
+        <div class="section-title ia-section">
+            <h2>🤖 Assistente IA</h2>
+            <p>Aprenda a tirar o máximo de proveito da sua tutora virtual para os estudos.</p>
+        </div>
+
+        <div class="step-card card-purple">
+            <div class="step-header">
+                <div class="icon-box text-purple">💬</div>
+                <h3>Histórico e Múltiplos Chats</h3>
+            </div>
+            
+            <div class="info-section">
+                <p class="info-title text-purple">O que é?</p>
+                <p class="info-text">É o menu lateral escondido (Sidebar) onde todas as suas conversas anteriores ficam salvas automaticamente.</p>
+            </div>
+
+            <div class="info-section">
+                <p class="info-title text-cyan">Para que serve?</p>
+                <p class="info-text">Para organizar seus estudos por matéria. Você pode ter um chat chamado "Matemática" e outro separado só para "Redação", sem misturar os assuntos.</p>
+            </div>
+
+            <div class="info-section">
+                <p class="info-title text-primary">Como usar?</p>
+                <p class="info-text">Clique no ícone <b>☰</b> no topo esquerdo para abrir o menu. Lá você pode criar um <span class="highlight ia">+ Novo Chat</span>. Nos chats existentes, você pode <b>📌 Fixar</b> (para ele ficar no topo da lista), <b>✏️ Editar o nome</b> gerado pela IA ou <b>🗑️ Excluir</b> a conversa.</p>
+            </div>
+        </div>
+
+        <div class="step-card card-cyan">
+            <div class="step-header">
+                <div class="icon-box text-cyan">🛠️</div>
+                <h3>Interagindo com Mensagens</h3>
+            </div>
+            
+            <div class="info-section">
+                <p class="info-title text-cyan">O que é?</p>
+                <p class="info-text">São as ações rápidas que aparecem embaixo de cada balão de mensagem ao passar o mouse ou clicar sobre elas.</p>
+            </div>
+
+            <div class="info-section">
+                <p class="info-title text-green">Para que serve?</p>
+                <p class="info-text">Para facilitar sua vida. Em vez de reescrever uma pergunta inteira, você pode editá-la. Em vez de selecionar um texto grande da IA, você pode copiá-lo com um clique.</p>
+            </div>
+
+            <div class="info-section">
+                <p class="info-title text-purple">Como usar?</p>
+                <div class="info-text" style="margin-top: 5px;">
+                    <ul style="padding-left: 20px; list-style-type: disc;">
+                        <li><b>Nas suas mensagens:</b> Use o botão <b>✏️ Editar</b> para corrigir um erro de digitação e reenviar a pergunta.</li>
+                        <li><b>Nas respostas da IA:</b> Use <b>📋 Copiar</b> para colar a resposta no seu trabalho ou <b>🔄 Refazer</b> se não gostou da resposta que ela te deu.</li>
+                        <li><b>Em qualquer mensagem:</b> Use <b>📌 Fixar Texto</b>. Isso coloca a mensagem selecionada na sua barra de digitação para que a IA saiba exatamente de qual parte você está falando na próxima pergunta.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="step-card card-orange">
+            <div class="step-header">
+                <div class="icon-box text-orange">⚙️</div>
+                <h3>Personalizando sua IA</h3>
+            </div>
+            
+            <div class="info-section">
+                <p class="info-title text-orange">O que é?</p>
+                <p class="info-text">É o painel de configurações que dita o comportamento e a identidade da sua tutora virtual.</p>
+            </div>
+
+            <div class="info-section">
+                <p class="info-title text-pink">Para que serve?</p>
+                <p class="info-text">Serve para deixar o aprendizado com a sua cara! Você pode mudar como ela te chama, o nome dela e até o sotaque ou a personalidade dela (ex: explicar tudo como um pirata, ou ser extremamente formal).</p>
+            </div>
+
+            <div class="info-section">
+                <p class="info-title text-purple">Como usar?</p>
+                <p class="info-text">Clique no botão de engrenagem <b>⚙️ Configurações</b> no topo direito do chat. Mude os nomes e edite a caixa de <i>"Personalidade da IA"</i>. Clique em Salvar e as próximas respostas já virão com o novo estilo!</p>
+            </div>
+        </div>
+
+        <div class="step-card card-green">
+            <div class="step-header">
+                <div class="icon-box text-green">🧠</div>
+                <h3>Integração com os Trabalhos</h3>
+            </div>
+            
+            <div class="info-section">
+                <p class="info-title text-green">O que é?</p>
+                <p class="info-text">É a memória especial da IA. Ela consegue "ler" todos os cartões e prazos que você anotou lá no seu Painel Modular.</p>
+            </div>
+
+            <div class="info-section">
+                <p class="info-title text-orange">Para que serve?</p>
+                <p class="info-text">Para te ajudar a gerenciar seu tempo sem precisar ficar trocando de aba o tempo todo.</p>
+            </div>
+
+            <div class="info-section">
+                <p class="info-title text-primary">Como usar?</p>
+                <p class="info-text">Apenas pergunte à IA: <i>"Quais são meus trabalhos pendentes?"</i> ou <i>"Tem algo para amanhã?"</i>. Ela fará um resumo de tudo que está salvo no seu painel e criará um botão rápido para você ir direto para a tela de tarefas.</p>
+            </div>
+        </div>
+
+        <div class="bottom-actions">
+            <a href="index.html" class="btn btn-new">⬅️ Voltar ao Painel</a>
+            <a href="ia.html" class="btn btn-ia">💬 Ir para a IA ➡️</a>
+        </div>
+    </div>
+
+    <script>
+        const themeToggle = document.getElementById('theme-toggle');
+        const htmlElement = document.documentElement;
+        
+        const savedTheme = localStorage.getItem('painel_theme') || 'dark';
+        htmlElement.setAttribute('data-theme', savedTheme);
+        themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+
+        themeToggle.addEventListener('click', () => {
+            const target = htmlElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            htmlElement.setAttribute('data-theme', target);
+            localStorage.setItem('painel_theme', target);
+            themeToggle.textContent = target === 'dark' ? '☀️' : '🌙';
+        });
+    </script>
+</body>
+</html>
+
