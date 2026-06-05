@@ -405,12 +405,12 @@
                 <i class="fas fa-plus"></i> Novo Chat
             </button>
             <div class="chats-history-list" id="chats-list">
-                </div>
+            </div>
         </aside>
 
         <main class="chat-main">
             <div class="messages-container" id="chat-messages">
-                </div>
+            </div>
 
             <div class="input-container">
                 <div class="input-wrapper">
@@ -450,9 +450,16 @@
         }
 
         // --- CONTROLE DE CONFIGURAÇÕES E PERSONALIDADE ---
-        const defaultSettings = { userName: "Estudante", aiName: "Modu AI", personality: "Você é uma tutora escolar prestativa, bem-humorada e focada em ajudar o aluno a se organizar de forma rápida e concisa." };
+        // Adicionada a propriedade 'apiKey' nas configurações padrão
+        const defaultSettings = { 
+            userName: "Estudante", 
+            aiName: "Modu AI", 
+            personality: "Você é uma tutora escolar prestativa, bem-humorada e focada em ajudar o aluno a se organizar de forma rápida e concisa.",
+            apiKey: "" 
+        };
         let aiConfig = JSON.parse(localStorage.getItem('modu_ai_config')) || defaultSettings;
 
+        // Modal adaptado para aceitar e guardar a API Key da Groq de forma segura
         async function openAiSettings() {
             playSound('click');
             const { value: formValues } = await Swal.fire({
@@ -465,6 +472,10 @@
                         <label style="font-size:0.85rem; font-weight:600;">Nome da sua Assistente:</label>
                         <input id="swal-ainame" class="swal2-input" value="${aiConfig.aiName}" style="margin:0; width:100%;">
                         
+                        <label style="font-size:0.85rem; font-weight:600;">Chave de API (Groq Cloud):</label>
+                        <input id="swal-apikey" type="password" placeholder="gsk_..." class="swal2-input" value="${aiConfig.apiKey || ''}" style="margin:0; width:100%;">
+                        <small style="color:var(--text-muted); font-size:0.75rem;">Consiga em: console.groq.com</small>
+
                         <label style="font-size:0.85rem; font-weight:600;">Personalidade / Estilo da IA:</label>
                         <textarea id="swal-personality" class="swal2-input" style="margin:0; width:100%; height:80px; font-size:0.9rem; padding:8px; line-height:1.4;">${aiConfig.personality}</textarea>
                     </div>
@@ -478,6 +489,7 @@
                     return {
                         userName: document.getElementById('swal-username').value.trim() || "Estudante",
                         aiName: document.getElementById('swal-ainame').value.trim() || "Modu AI",
+                        apiKey: document.getElementById('swal-apikey').value.trim(),
                         personality: document.getElementById('swal-personality').value.trim() || defaultSettings.personality
                     }
                 }
@@ -487,7 +499,6 @@
                 aiConfig = formValues;
                 localStorage.setItem('modu_ai_config', JSON.stringify(aiConfig));
                 playSound('success');
-                // Adiciona mensagem amigável confirmando alteração
                 activeChatHistory.push({ sender: 'ia', text: `Configurações salvas! A partir de agora agirei conforme solicitado, ${aiConfig.userName}.` });
                 saveChats();
                 renderMessages();
@@ -633,7 +644,7 @@
             }
         }
 
-        // --- LOGICA DE RESPOSTAS E INTEGRAÇÃO DE DADOS REAL DO PAINEL ---
+        // --- LOGICA DE PARSING DE DADOS DO PAINEL ---
         function parseDashboardTasks() {
             const data = JSON.parse(localStorage.getItem('painel_modular_v2'));
             if(!data) return null;
@@ -647,10 +658,98 @@
                         if(bloco.type === 'titulo') titulo = bloco.value;
                         if(bloco.type === 'data') prazo = bloco.value;
                     });
-                    listagemStr.push(`• **${titulo}** (Categoria: ${cat}) - Prazo: ${prazo}`);
+                    listagemStr.push(`• ${titulo} (Categoria: ${cat}) - Prazo: ${prazo}`);
                 });
             });
             return listagemStr;
+        }
+
+        // --- INTEGRAÇÃO COM A API DO GROQ ---
+        async function fetchAIResponse() {
+            // Se o usuário não configurou a chave de API ainda
+            if (!aiConfig.apiKey) {
+                setTimeout(() => {
+                    activeChatHistory.push({ 
+                        sender: 'ia', 
+                        text: "⚠️ **Chave de API não encontrada!** Para conversar comigo, por favor clique no botão de **Engrenagem ⚙️** acima e insira sua chave da Groq Cloud." 
+                    });
+                    renderMessages();
+                    saveChats();
+                }, 400);
+                return;
+            }
+
+            // Cria um balão temporário de digitação
+            const loadingIndex = activeChatHistory.length;
+            activeChatHistory.push({ sender: 'ia', text: '<i class="fas fa-spinner fa-spin"></i> Pensando...' });
+            renderMessages();
+
+            try {
+                // Instancia o prompt básico com a personalidade salva pelo estudante
+                let systemPrompt = `${aiConfig.personality}\nSeu nome de assistente é ${aiConfig.aiName}. Trate o usuário pelo nome de ${aiConfig.userName}.`;
+
+                // Pega o último texto enviado para contextualizar intenções
+                const lastUserMessage = [...activeChatHistory].reverse().find(m => m.sender === 'user');
+                const lowerText = lastUserMessage ? lastUserMessage.text.toLowerCase() : "";
+
+                // Injeção Contextual Automática de Tarefas do Painel Modular
+                if (lowerText.includes('trabalho') || lowerText.includes('pendente') || lowerText.includes('prazo') || lowerText.includes('tarefa') || lowerText.includes('amanhã')) {
+                    const tasks = parseDashboardTasks();
+                    if(tasks && tasks.length > 0) {
+                        systemPrompt += `\n\n[DADOS DO PAINEL DO ALUNO]: O usuário possui os seguintes cartões salvos:\n${tasks.join('\n')}\nUse estes dados diretamente para responder e organizar as pendências dele.`;
+                    }
+                }
+
+                // Monta o histórico estruturado no formato padrão ChatCompletion (OpenAI/Groq)
+                const apiMessages = [{ role: "system", content: systemPrompt }];
+                
+                // Mapeia o histórico ignorando o balão temporário de loading
+                const historyToMap = activeChatHistory.slice(0, loadingIndex);
+                historyToMap.forEach(msg => {
+                    apiMessages.push({
+                        role: msg.sender === 'user' ? 'user' : 'assistant',
+                        content: msg.text
+                    });
+                });
+
+                // Chamada Assíncrona para o endpoint da Groq Cloud
+                const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${aiConfig.apiKey}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        model: "llama3-8b-8192", // Modelo ultra rápido da Groq
+                        messages: apiMessages,
+                        temperature: 0.7
+                    })
+                });
+
+                if(!response.ok) {
+                    throw new Error(`Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const aiResponseText = data.choices[0].message.content;
+
+                // Define se exibe o atalho para a index de tarefas
+                let triggerTaskBtn = lowerText.includes('trabalho') || lowerText.includes('pendente') || lowerText.includes('tarefa');
+
+                // Substitui o loading pela resposta gerada pela inteligência artificial
+                activeChatHistory[loadingIndex] = { sender: 'ia', text: aiResponseText, showBtn: triggerTaskBtn };
+                playSound('success');
+
+            } catch (error) {
+                console.error("Erro na requisição da IA:", error);
+                activeChatHistory[loadingIndex] = { 
+                    sender: 'ia', 
+                    text: "❌ **Erro de conexão com a IA.** Verifique se sua chave de API está ativa, ou se há bloqueios de rede/CORS no seu ambiente de execução." 
+                };
+            }
+
+            renderMessages();
+            saveChats();
         }
 
         function handleSendMessage() {
@@ -666,31 +765,8 @@
             renderMessages();
             saveChats();
 
-            // Simulação de processamento inteligente de resposta baseado na intenção do usuário
-            setTimeout(() => {
-                let aiResponseText = "";
-                let triggerTaskBtn = false;
-                const lowerText = text.toLowerCase();
-
-                if (lowerText.includes('trabalho') || lowerText.includes('pendente') || lowerText.includes('prazo') || lowerText.includes('tarefa') || lowerText.includes('amanhã')) {
-                    const tasks = parseDashboardTasks();
-                    if(tasks && tasks.length > 0) {
-                        aiResponseText = `Achei seus registros no Painel Modular! Aqui está a lista das suas atividades atuais:\n\n${tasks.join('\n')}\n\nDeseja ir até o painel para atualizar ou adicionar novos blocos?`;
-                        triggerTaskBtn = true;
-                    } else {
-                        aiResponseText = "Dei uma olhada na memória do seu painel modular, mas parece que você não tem nenhum grupo ou tarefa salva por lá ainda. Que tal criar uma agora?";
-                    }
-                } else if(lowerText.includes('ajuda') || lowerText.includes('como usar')) {
-                    aiResponseText = "Você pode usar este chat para planejar suas rotinas escolares. Se quiser ver o passo a passo ilustrado das ferramentas, acesse a nossa página de tutoriais!";
-                } else {
-                    aiResponseText = `Entendi a sua dúvida sobre estudos! Lembre-se que meu modo atual responde com base na personalidade configurada por você ("${aiConfig.aiName}"). Posso te ajudar a quebrar essa matéria em tópicos organizados no seu painel para facilitar!`;
-                }
-
-                activeChatHistory.push({ sender: 'ia', text: aiResponseText, showBtn: triggerTaskBtn });
-                renderMessages();
-                saveChats();
-                playSound('success');
-            }, 750);
+            // Dispara a chamada assíncrona da API
+            fetchAIResponse();
         }
 
         // --- INTERAÇÕES COM OS BALÕES DE MENSAGEM ---
@@ -712,11 +788,10 @@
 
             if (newText && newText.trim()) {
                 activeChatHistory[index].text = newText.trim();
-                // Remove as respostas geradas à frente da mensagem editada para manter fluxo lógico
-                activeChatHistory.splice(index + 1);
+                activeChatHistory.splice(index + 1); // Limpa respostas desatualizadas à frente
                 saveChats();
                 renderMessages();
-                handleSendMessage(); // Reenvia automatico
+                fetchAIResponse(); // Re-executa com o novo texto editado
             }
         }
 
@@ -730,17 +805,10 @@
 
         function regenerateResponse(index) {
             playSound('click');
-            // Deleta resposta atual e simula reenvio da última msg do usuário
-            activeChatHistory.splice(index);
+            activeChatHistory.splice(index); // Remove a resposta anterior e as seguintes
             saveChats();
             renderMessages();
-            
-            setTimeout(() => {
-                activeChatHistory.push({ sender: 'ia', text: "Gerei uma resposta alternativa para a sua última pergunta! Posso detalhar o assunto de forma diferente caso prefira." });
-                renderMessages();
-                saveChats();
-                playSound('success');
-            }, 400);
+            fetchAIResponse(); // Solicita uma nova resposta para o histórico atual
         }
 
         // --- RENDERIZADORES DA TELA ---
@@ -771,7 +839,7 @@
                 }
 
                 wrapper.innerHTML = `
-                    <div class="message-bubble">${msg.text.replace(/\n/g, '<br>')}
+                    <div class="message-bubble">${msg.text.includes('fa-spinner') ? msg.text : msg.text.replace(/\n/g, '<br>')}
                         ${msg.showBtn ? '<br><a href="index.html" class="ia-task-btn"><i class="fas fa-arrow-right"></i> Ver meus cartões de tarefas</a>' : ''}
                     </div>
                     ${actionsHtml}
@@ -801,4 +869,5 @@
     </script>
 </body>
 </html>
-
+</body>
+</html>
