@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Modu | Assistente IA</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-color: #121212;
+            --surface-color: #1e1e1e;
+            --block-bg: #2d2d2d;
+            --primary-color: #bb86fc;
+            --primary-hover: #9a66da;
+            --secondary-color: #03dac6;
+            --error-color: #cf6679;
+            --text-color: #e1e1e1;
+            --text-muted: #888888;
+            --border-radius: 16px;
+            --shadow: 0 6px 12px rgba(0,0,0,0.25);
+            --sidebar-width: 260px;
+        }
+
+        body.light-mode {
+            --bg-color: #f4f6f9;
+            --surface-color: #ffffff;
+            --block-bg: #f0f2f5;
+            --primary-color: #6200ee;
+            --primary-hover: #4b00b4;
+            --secondary-color: #018786;
+            --error-color: #b00020;
+            --text-color: #1a1a1a;
+            --text-muted: #666666;
+            --shadow: 0 4px 10px rgba(0,0,0,0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* ----- HEADER ----- */
+        header {
+            background-color: var(--surface-color);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            z-index: 10;
+            width: 100%;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        body.light-mode header {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        header h1 {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn-header {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 8px;
+            transition: color 0.2s, transform 0.1s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-header:hover { color: var(--primary-color); transform: scale(1.05); }
+        .btn-header.active { color: var(--secondary-color); }
+
+        /* ----- LAYOUT E SIDEBAR ----- */
+        .app-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--surface-color);
+            border-right: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            gap: 15px;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s;
+            z-index: 5;
+        }
+
+        body.light-mode .sidebar {
+            border-right: 1px solid rgba(0,0,0,0.05);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                transform: translateX(-100%);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+                box-shadow: 4px 0 15px rgba(0,0,0,0.5);
+            }
+        }
+
+        .btn-new-chat {
+            background-color: var(--block-bg);
+            color: var(--primary-color);
+            border: 1px dashed var(--primary-color);
+            padding: 12px;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .btn-new-chat:hover {
+            background-color: var(--primary-color);
+            color: #ffffff;
+        }
+
+        .chats-history-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .chats-history-list::-webkit-scrollbar { width: 4px; }
+        .chats-history-list::-webkit-scrollbar-thumb { background: var(--block-bg); border-radius: 10px; }
+
+        .chat-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            background-color: transparent;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            transition: all 0.2s;
+            gap: 6px;
+        }
+        .chat-list-item:hover, .chat-list-item.active {
+            background-color: var(--block-bg);
+            color: var(--text-color);
+        }
+        .chat-list-item.active {
+            border-left: 3px solid var(--primary-color);
+            font-weight: 600;
+        }
+        .chat-item-title {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .chat-item-actions {
+            display: none;
+            gap: 6px;
+        }
+        .chat-list-item:hover .chat-item-actions, .chat-list-item.active .chat-item-actions {
+            display: flex;
+        }
+        .btn-item-action {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .btn-item-action:hover { color: var(--primary-color); }
+        .btn-item-action.danger:hover { color: var(--error-color); }
+
+        /* ----- CHAT MAIN WINDOW ----- */
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-color);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .messages-container::-webkit-scrollbar { width: 6px; }
+        .messages-container::-webkit-scrollbar-thumb { background: var(--block-bg); border-radius: 10px; }
+
+        .message-wrapper {
+            display: flex;
+            flex-direction: column;
+            max-width: 85%;
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-wrapper.user {
+            align-self: flex-end;
+            align-items: flex-end;
+        }
+        .message-wrapper.ia {
+            align-self: flex-start;
+            align-items: flex-start;
+        }
+
+        .message-bubble {
+            padding: 14px 16px;
+            border-radius: var(--border-radius);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            word-break: break-word;
+            box-shadow: var(--shadow);
+        }
+        .message-wrapper.user .message-bubble {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            border-bottom-right-radius: 4px;
+        }
+        body.light-mode .message-wrapper.user .message-bubble {
+            color: #ffffff;
+        }
+        .message-wrapper.ia .message-bubble {
+            background-color: var(--surface-color);
+            color: var(--text-color);
+            border-bottom-left-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.02);
+        }
+        body.light-mode .message-wrapper.ia .message-bubble {
+            border: 1px solid rgba(0,0,0,0.03);
+        }
+
+        /* Ações Rápidas Abaixo dos Balões */
+        .message-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 4px;
+            padding: 0 6px;
+        }
+        .btn-msg-action {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: color 0.2s;
+        }
+        .btn-msg-action:hover { color: var(--secondary-color); }
+
+        /* Botão Adaptável Dentro da IA */
+        .ia-task-btn {
+            margin-top: 10px;
+            background: var(--block-bg);
+            border: 1px solid var(--secondary-color);
+            color: var(--secondary-color);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .ia-task-btn:hover {
+            background: var(--secondary-color);
+            color: #fff;
+        }
+
+        /* ----- INPUT BOX FIXO ----- */
+        .input-container {
+            padding: 20px;
+            background-color: var(--bg-color);
+            border-top: 1px solid rgba(255,255,255,0.03);
+        }
+        body.light-mode .input-container {
+            border-top: 1px solid rgba(0,0,0,0.05);
+        }
+        .input-wrapper {
+            max-width: 700px;
+            margin: 0 auto;
+            position: relative;
+            display: flex;
+            background-color: var(--surface-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255,255,255,0.05);
+            align-items: center;
+            padding: 6px 10px;
+        }
+        body.light-mode .input-wrapper {
+            border: 1px solid rgba(0,0,0,0.08);
+        }
+        .input-wrapper textarea {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            padding: 10px;
+            font-size: 0.95rem;
+            resize: none;
+            max-height: 120px;
+            min-height: 40px;
+            height: 40px;
+            outline: none;
+        }
+        .btn-send {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s, transform 0.1s;
+            flex-shrink: 0;
+        }
+        .btn-send:hover { background-color: var(--primary-hover); transform: scale(1.03); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>
+            <button id="sidebar-toggle" class="btn-header" style="padding: 0 5px; margin-right: 5px;" title="Menu Lateral">
+                <i class="fas fa-bars"></i>
+            </button>
+            <i class="fas fa-robot"></i> Assistente IA
+        </h1>
+        <div class="header-actions">
+            <a href="index.html" class="btn-header" title="Voltar ao Painel Modular">
+                <i class="fas fa-cubes"></i>
+            </a>
+            <a href="tutorial.html" class="btn-header" title="Abrir Tutorial">
+                <i class="fa-regular fa-circle-question"></i>
+            </a>
+            <button id="ai-settings-btn" class="btn-header" onclick="openAiSettings()" title="Configurações da IA">
+                <i class="fas fa-gear"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="app-container">
+        
+        <aside class="sidebar" id="sidebar-menu">
+            <button class="btn-new-chat" onclick="createNewChat()">
+                <i class="fas fa-plus"></i> Novo Chat
+            </button>
+            <div class="chats-history-list" id="chats-list">
+                </div>
+        </aside>
+
+        <main class="chat-main">
+            <div class="messages-container" id="chat-messages">
+                </div>
+
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <textarea id="user-input" placeholder="Pergunte sobre seus trabalhos pendentes ou tire dúvidas..." oninput="autoResizeInput(this)"></textarea>
+                    <button class="btn-send" onclick="handleSendMessage()" title="Enviar Mensagem">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+    </div>
+
+    <script>
+        // --- EFEITOS SONOROS ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            if (type === 'click') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(300, now + 0.05);
+                gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now); osc.stop(now + 0.05);
+            } else if (type === 'success') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(523.25, now); osc.frequency.setValueAtTime(659.25, now + 0.08);
+                gain.gain.setValueAtTime(0, now); gain.gain.linearRampToValueAtTime(0.15, now + 0.04); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                osc.start(now); osc.stop(now + 0.25);
+            } else if (type === 'delete') {
+                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(140, now); osc.frequency.linearRampToValueAtTime(50, now + 0.15);
+                gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                osc.start(now); osc.stop(now + 0.15);
+            }
+            osc.connect(gain); gain.connect(audioCtx.destination);
+        }
+
+        // --- CONTROLE DE CONFIGURAÇÕES E PERSONALIDADE ---
+        const defaultSettings = { userName: "Estudante", aiName: "Modu AI", personality: "Você é uma tutora escolar prestativa, bem-humorada e focada em ajudar o aluno a se organizar de forma rápida e concisa." };
+        let aiConfig = JSON.parse(localStorage.getItem('modu_ai_config')) || defaultSettings;
+
+        async function openAiSettings() {
+            playSound('click');
+            const { value: formValues } = await Swal.fire({
+                title: '<i class="fas fa-robot"></i> Customizar IA',
+                html: `
+                    <div style="text-align:left; display:flex; flex-direction:column; gap:12px; padding: 10px 0;">
+                        <label style="font-size:0.85rem; font-weight:600;">Como a IA deve chamar você:</label>
+                        <input id="swal-username" class="swal2-input" value="${aiConfig.userName}" style="margin:0; width:100%;">
+                        
+                        <label style="font-size:0.85rem; font-weight:600;">Nome da sua Assistente:</label>
+                        <input id="swal-ainame" class="swal2-input" value="${aiConfig.aiName}" style="margin:0; width:100%;">
+                        
+                        <label style="font-size:0.85rem; font-weight:600;">Personalidade / Estilo da IA:</label>
+                        <textarea id="swal-personality" class="swal2-input" style="margin:0; width:100%; height:80px; font-size:0.9rem; padding:8px; line-height:1.4;">${aiConfig.personality}</textarea>
+                    </div>
+                `,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'Salvar',
+                confirmButtonColor: 'var(--primary-color)',
+                cancelButtonText: 'Cancelar',
+                preConfirm: () => {
+                    return {
+                        userName: document.getElementById('swal-username').value.trim() || "Estudante",
+                        aiName: document.getElementById('swal-ainame').value.trim() || "Modu AI",
+                        personality: document.getElementById('swal-personality').value.trim() || defaultSettings.personality
+                    }
+                }
+            });
+
+            if (formValues) {
+                aiConfig = formValues;
+                localStorage.setItem('modu_ai_config', JSON.stringify(aiConfig));
+                playSound('success');
+                // Adiciona mensagem amigável confirmando alteração
+                activeChatHistory.push({ sender: 'ia', text: `Configurações salvas! A partir de agora agirei conforme solicitado, ${aiConfig.userName}.` });
+                saveChats();
+                renderMessages();
+            }
+        }
+
+        // --- GERENCIAMENTO DE FILTRO DE TEMA ---
+        if (localStorage.getItem('theme') === 'light') {
+            document.body.classList.add('light-mode');
+        }
+
+        // --- SIDEBAR TOGGLE MANUAL ---
+        document.getElementById('sidebar-toggle').addEventListener('click', () => {
+            playSound('click');
+            document.getElementById('sidebar-menu').classList.toggle('open');
+        });
+
+        // --- SISTEMA INTERNO DE MULTI-CHATS E LOCALSTORAGE ---
+        let chatDatabase = JSON.parse(localStorage.getItem('modu_ai_chats_v2'));
+        
+        if (!chatDatabase || Object.keys(chatDatabase).length === 0) {
+            chatDatabase = {
+                "chat_default": {
+                    id: "chat_default",
+                    title: "Estudos Gerais 📚",
+                    pinned: false,
+                    messages: [
+                        { sender: "ia", text: "Olá! Sou sua assistente integrada ao seu painel modular. Como posso ajudar com os seus estudos hoje?" }
+                    ]
+                }
+            };
+        }
+
+        let currentChatId = localStorage.getItem('modu_active_chat_id') || "chat_default";
+        if (!chatDatabase[currentChatId]) currentChatId = Object.keys(chatDatabase)[0];
+
+        let activeChatHistory = chatDatabase[currentChatId].messages;
+
+        function saveChats() {
+            chatDatabase[currentChatId].messages = activeChatHistory;
+            localStorage.setItem('modu_ai_chats_v2', JSON.stringify(chatDatabase));
+            localStorage.setItem('modu_active_chat_id', currentChatId);
+        }
+
+        function renderChatsList() {
+            const list = document.getElementById('chats-list');
+            list.innerHTML = '';
+
+            const sortedChats = Object.values(chatDatabase).sort((a, b) => b.pinned - a.pinned);
+
+            sortedChats.forEach(chat => {
+                const item = document.createElement('div');
+                item.className = `chat-list-item ${chat.id === currentChatId ? 'active' : ''}`;
+                item.onclick = (e) => {
+                    if(e.target.closest('.btn-item-action')) return;
+                    selectChat(chat.id);
+                };
+
+                item.innerHTML = `
+                    <span class="chat-item-title"><i class="fa-regular fa-comments"></i> ${chat.pinned ? '📌 ' : ''}${chat.title}</span>
+                    <div class="chat-item-actions">
+                        <button class="btn-item-action" onclick="togglePinChat('${chat.id}')" title="Fixar Conversa"><i class="fas fa-thumbtack"></i></button>
+                        <button class="btn-item-action" onclick="renameChat('${chat.id}')" title="Editar Nome"><i class="fas fa-pen"></i></button>
+                        <button class="btn-item-action danger" onclick="deleteChat('${chat.id}')" title="Excluir"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function selectChat(id) {
+            playSound('click');
+            currentChatId = id;
+            activeChatHistory = chatDatabase[id].messages;
+            localStorage.setItem('modu_active_chat_id', id);
+            renderChatsList();
+            renderMessages();
+            document.getElementById('sidebar-menu').classList.remove('open');
+        }
+
+        function createNewChat() {
+            playSound('click');
+            const newId = "chat_" + Date.now();
+            chatDatabase[newId] = {
+                id: newId,
+                title: "Nova conversa 💬",
+                pinned: false,
+                messages: [
+                    { sender: "ia", text: `Olá! Abri um espaço novo para organizarmos outra matéria. O que está estudando agora?` }
+                ]
+            };
+            currentChatId = newId;
+            activeChatHistory = chatDatabase[newId].messages;
+            saveChats();
+            renderChatsList();
+            renderMessages();
+        }
+
+        async function renameChat(id) {
+            playSound('click');
+            const { value: newTitle } = await Swal.fire({
+                title: 'Renomear Chat',
+                input: 'text',
+                inputValue: chatDatabase[id].title,
+                showCancelButton: true,
+                confirmButtonColor: 'var(--primary-color)'
+            });
+            if(newTitle && newTitle.trim()) {
+                chatDatabase[id].title = newTitle.trim();
+                saveChats();
+                renderChatsList();
+            }
+        }
+
+        function togglePinChat(id) {
+            playSound('click');
+            chatDatabase[id].pinned = !chatDatabase[id].pinned;
+            saveChats();
+            renderChatsList();
+        }
+
+        async function deleteChat(id) {
+            playSound('click');
+            if(Object.keys(chatDatabase).length <= 1) {
+                Swal.fire('Aviso', 'Você precisa manter pelo menos um chat ativo.', 'info');
+                return;
+            }
+            const res = await Swal.fire({
+                title: 'Excluir conversa?',
+                text: "O histórico de mensagens será apagado permanentemente.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: 'var(--error-color)'
+            });
+            if(res.isConfirmed) {
+                delete chatDatabase[id];
+                if(currentChatId === id) currentChatId = Object.keys(chatDatabase)[0];
+                activeChatHistory = chatDatabase[currentChatId].messages;
+                saveChats();
+                renderChatsList();
+                renderMessages();
+                playSound('delete');
+            }
+        }
+
+        // --- LOGICA DE RESPOSTAS E INTEGRAÇÃO DE DADOS REAL DO PAINEL ---
+        function parseDashboardTasks() {
+            const data = JSON.parse(localStorage.getItem('painel_modular_v2'));
+            if(!data) return null;
+            
+            let listagemStr = [];
+            Object.keys(data).forEach(cat => {
+                data[cat].forEach(grupo => {
+                    let titulo = "Sem título";
+                    let prazo = "Sem prazo determinado";
+                    grupo.forEach(bloco => {
+                        if(bloco.type === 'titulo') titulo = bloco.value;
+                        if(bloco.type === 'data') prazo = bloco.value;
+                    });
+                    listagemStr.push(`• **${titulo}** (Categoria: ${cat}) - Prazo: ${prazo}`);
+                });
+            });
+            return listagemStr;
+        }
+
+        function handleSendMessage() {
+            const inputEle = document.getElementById('user-input');
+            const text = inputEle.value.trim();
+            if(!text) return;
+
+            playSound('click');
+            activeChatHistory.push({ sender: 'user', text: text });
+            inputEle.value = '';
+            inputEle.style.height = '40px';
+
+            renderMessages();
+            saveChats();
+
+            // Simulação de processamento inteligente de resposta baseado na intenção do usuário
+            setTimeout(() => {
+                let aiResponseText = "";
+                let triggerTaskBtn = false;
+                const lowerText = text.toLowerCase();
+
+                if (lowerText.includes('trabalho') || lowerText.includes('pendente') || lowerText.includes('prazo') || lowerText.includes('tarefa') || lowerText.includes('amanhã')) {
+                    const tasks = parseDashboardTasks();
+                    if(tasks && tasks.length > 0) {
+                        aiResponseText = `Achei seus registros no Painel Modular! Aqui está a lista das suas atividades atuais:\n\n${tasks.join('\n')}\n\nDeseja ir até o painel para atualizar ou adicionar novos blocos?`;
+                        triggerTaskBtn = true;
+                    } else {
+                        aiResponseText = "Dei uma olhada na memória do seu painel modular, mas parece que você não tem nenhum grupo ou tarefa salva por lá ainda. Que tal criar uma agora?";
+                    }
+                } else if(lowerText.includes('ajuda') || lowerText.includes('como usar')) {
+                    aiResponseText = "Você pode usar este chat para planejar suas rotinas escolares. Se quiser ver o passo a passo ilustrado das ferramentas, acesse a nossa página de tutoriais!";
+                } else {
+                    aiResponseText = `Entendi a sua dúvida sobre estudos! Lembre-se que meu modo atual responde com base na personalidade configurada por você ("${aiConfig.aiName}"). Posso te ajudar a quebrar essa matéria em tópicos organizados no seu painel para facilitar!`;
+                }
+
+                activeChatHistory.push({ sender: 'ia', text: aiResponseText, showBtn: triggerTaskBtn });
+                renderMessages();
+                saveChats();
+                playSound('success');
+            }, 750);
+        }
+
+        // --- INTERAÇÕES COM OS BALÕES DE MENSAGEM ---
+        function copyMsg(text) {
+            navigator.clipboard.writeText(text);
+            playSound('success');
+            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Copiado para a área de transferência!', showConfirmButton: false, timer: 1500 });
+        }
+
+        async function editMsg(index) {
+            playSound('click');
+            const { value: newText } = await Swal.fire({
+                title: 'Editar Mensagem',
+                input: 'textarea',
+                inputValue: activeChatHistory[index].text,
+                showCancelButton: true,
+                confirmButtonColor: 'var(--primary-color)'
+            });
+
+            if (newText && newText.trim()) {
+                activeChatHistory[index].text = newText.trim();
+                // Remove as respostas geradas à frente da mensagem editada para manter fluxo lógico
+                activeChatHistory.splice(index + 1);
+                saveChats();
+                renderMessages();
+                handleSendMessage(); // Reenvia automatico
+            }
+        }
+
+        function pinTextToPrompt(text) {
+            playSound('click');
+            const input = document.getElementById('user-input');
+            input.value = `Referente a isso: "${text}" -> `;
+            input.focus();
+            autoResizeInput(input);
+        }
+
+        function regenerateResponse(index) {
+            playSound('click');
+            // Deleta resposta atual e simula reenvio da última msg do usuário
+            activeChatHistory.splice(index);
+            saveChats();
+            renderMessages();
+            
+            setTimeout(() => {
+                activeChatHistory.push({ sender: 'ia', text: "Gerei uma resposta alternativa para a sua última pergunta! Posso detalhar o assunto de forma diferente caso prefira." });
+                renderMessages();
+                saveChats();
+                playSound('success');
+            }, 400);
+        }
+
+        // --- RENDERIZADORES DA TELA ---
+        function renderMessages() {
+            const container = document.getElementById('chat-messages');
+            container.innerHTML = '';
+
+            activeChatHistory.forEach((msg, idx) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = `message-wrapper ${msg.sender}`;
+
+                let actionsHtml = '';
+                if(msg.sender === 'user') {
+                    actionsHtml = `
+                        <div class="message-actions">
+                            <button class="btn-msg-action" onclick="editMsg(${idx})"><i class="fas fa-pen"></i> Editar</button>
+                            <button class="btn-msg-action" onclick="copyMsg('${msg.text.replace(/'/g, "\\'")}')"><i class="fa-regular fa-copy"></i> Copiar</button>
+                        </div>
+                    `;
+                } else {
+                    actionsHtml = `
+                        <div class="message-actions">
+                            <button class="btn-msg-action" onclick="copyMsg('${msg.text.replace(/'/g, "\\'")}')"><i class="fa-regular fa-copy"></i> Copiar</button>
+                            <button class="btn-msg-action" onclick="regenerateResponse(${idx})"><i class="fas fa-rotate-left"></i> Refazer</button>
+                            <button class="btn-msg-action" onclick="pinTextToPrompt('${msg.text.replace(/'/g, "\\'")}')"><i class="fas fa-thumbtack"></i> Fixar Texto</button>
+                        </div>
+                    `;
+                }
+
+                wrapper.innerHTML = `
+                    <div class="message-bubble">${msg.text.replace(/\n/g, '<br>')}
+                        ${msg.showBtn ? '<br><a href="index.html" class="ia-task-btn"><i class="fas fa-arrow-right"></i> Ver meus cartões de tarefas</a>' : ''}
+                    </div>
+                    ${actionsHtml}
+                `;
+                container.appendChild(wrapper);
+            });
+
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function autoResizeInput(element) {
+            element.style.height = '40px';
+            element.style.height = (element.scrollHeight - 10) + 'px';
+        }
+
+        // Envio com a tecla Enter (sem Shift)
+        document.getElementById('user-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage();
+            }
+        });
+
+        // --- BOOT ---
+        renderChatsList();
+        renderMessages();
+    </script>
+</body>
+</html>
+
