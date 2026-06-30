@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Meu Painel Modular</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-color: #121212;
+            --surface-color: #1e1e1e;
+            --block-bg: #2d2d2d;
+            --primary-color: #bb86fc;
+            --primary-hover: #9a66da;
+            --secondary-color: #03dac6;
+            --error-color: #cf6679;
+            --text-color: #e1e1e1;
+            --text-muted: #888888;
+            --border-radius: 16px;
+            --alert-color: #ff5722;
+            --shadow: 0 6px 12px rgba(0,0,0,0.25);
+        }
+
+        /* ----- CONFIGURAÇÃO DO MODO CLARO (LIGHT MODE) ----- */
+        body.light-mode {
+            --bg-color: #f4f6f9;
+            --surface-color: #ffffff;
+            --block-bg: #f0f2f5;
+            --primary-color: #6200ee;
+            --primary-hover: #4b00b4;
+            --secondary-color: #018786;
+            --error-color: #b00020;
+            --text-color: #1a1a1a;
+            --text-muted: #666666;
+            --shadow: 0 4px 10px rgba(0,0,0,0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding-bottom: 40px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        header {
+            background-color: var(--surface-color);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            z-index: 10;
+            width: 100%;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        body.light-mode header {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        header h1 {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn-header {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 8px;
+            transition: color 0.2s, transform 0.1s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-header:hover { color: var(--primary-color); transform: scale(1.05); }
+        .btn-header.active { color: var(--secondary-color); }
+
+        .main-container {
+            padding: 20px;
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* ----- NOTIFICAÇÃO ESTILO PULSO ----- */
+        .notification-banner {
+            background: rgba(255, 87, 34, 0.15);
+            color: #ff7043;
+            border: 1px solid var(--alert-color);
+            padding: 12px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            animation: pulseAlertBg 2s infinite alternate;
+        }
+
+        @keyframes pulseAlertBg {
+            from { box-shadow: 0 0 4px rgba(255,87,34,0.2); }
+            to { box-shadow: 0 0 12px rgba(255,87,34,0.5); }
+        }
+
+        /* ----- BUSCA ----- */
+        .search-container input {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 1rem;
+            background-color: var(--surface-color);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: var(--border-radius);
+            color: var(--text-color);
+            outline: none;
+            box-shadow: var(--shadow);
+            transition: border-color 0.2s, background-color 0.3s;
+        }
+        body.light-mode .search-container input {
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        .search-container input:focus {
+            border-color: var(--primary-color);
+        }
+
+        /* ----- CATEGORIAS ----- */
+        .categories-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .categories-container {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+            flex-grow: 1;
+        }
+        .categories-container::-webkit-scrollbar { height: 4px; }
+        .categories-container::-webkit-scrollbar-thumb { background: var(--block-bg); border-radius: 10px; }
+
+        .category-btn {
+            background-color: var(--surface-color);
+            border: 1px solid transparent;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            color: var(--text-muted);
+            white-space: nowrap;
+            transition: all 0.2s;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .category-btn:hover { color: var(--text-color); background-color: var(--block-bg); }
+        .category-btn.active {
+            background-color: var(--primary-color);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(187, 134, 252, 0.4);
+        }
+        body.light-mode .category-btn.active {
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(98, 0, 238, 0.3);
+        }
+
+        .btn-add-cat {
+            background: var(--surface-color);
+            border: 1px dashed var(--primary-color);
+            color: var(--primary-color);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+        .btn-add-cat:hover { background: var(--primary-color); color: #fff; }
+
+        /* ----- ÁREA DE CONTEÚDO ----- */
+        .content-area {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 5px;
+        }
+        .category-header h2 {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-weight: 600;
+            width: 100%;
+        }
+
+        /* ----- GRUPOS DE ITENS ----- */
+        .item-group {
+            background-color: var(--surface-color);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+            animation: fadeIn 0.3s ease-out forwards;
+            transition: background-color 0.3s;
+        }
+        body.light-mode .item-group {
+            border: 1px solid rgba(0, 0, 0, 0.03);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ----- COMPONENTES VISUAIS DOS BLOCOS ----- */
+        .view-titulo { font-size: 1.25rem; font-weight: 700; color: var(--primary-color); }
+        .view-data { display: inline-flex; align-items: center; gap: 6px; background: var(--block-bg); padding: 5px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; color: var(--secondary-color); width: max-content; border: 1px solid rgba(3, 218, 198, 0.2); transition: background-color 0.3s; }
+        .view-sobre { line-height: 1.5; color: var(--text-color); white-space: pre-wrap; font-size: 0.95rem; }
+        .view-topicos { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+        .view-topicos li { font-size: 0.95rem; display: flex; align-items: flex-start; gap: 8px; color: var(--text-color); }
+        .view-topicos li::before { content: "•"; color: var(--primary-color); font-weight: bold; }
+        .view-imagem { max-width: 100%; border-radius: 8px; margin-top: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.5); display: block; }
+        
+        .file-list-view { display: flex; flex-direction: column; gap: 6px; }
+        .file-link { background: var(--block-bg); border: 1px solid rgba(255,255,255,0.05); color: var(--text-color); padding: 10px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-size: 0.9rem; transition: 0.2s; width: 100%; text-align: left; cursor: pointer; }
+        .file-link:hover { border-color: var(--secondary-color); background: rgba(3, 218, 198, 0.05); }
+
+        /* ----- INPUTS E CONTROLES DO MODO DE EDIÇÃO ----- */
+        .block-card {
+            background: var(--block-bg);
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px dashed rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: background-color 0.3s;
+        }
+        body.light-mode .block-card {
+            border: 1px dashed rgba(0,0,0,0.1);
+        }
+        .block-type-badge {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--secondary-color);
+            letter-spacing: 0.5px;
+        }
+
+        input[type="text"], textarea {
+            width: 100%; background: var(--surface-color); color: var(--text-color);
+            border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 6px; 
+            font-size: 0.9rem; outline: none; transition: border-color 0.2s, background-color 0.3s;
+        }
+        body.light-mode input[type="text"], body.light-mode textarea {
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        input[type="text"]:focus, textarea:focus { border-color: var(--primary-color); }
+        textarea { resize: vertical; min-height: 60px; }
+
+        .block-controls { display: flex; gap: 6px; justify-content: flex-end; }
+        .btn-control { background: var(--surface-color); border: none; color: var(--text-color); padding: 4px 8px; font-size: 0.8rem; border-radius: 4px; cursor: pointer; }
+        .btn-control:hover { color: var(--primary-color); }
+        .btn-control.danger:hover { color: var(--error-color); }
+
+        .add-blocks-menu {
+            display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; padding-top: 10px;
+            border-top: 1px dashed rgba(255,255,255,0.1);
+        }
+        body.light-mode .add-blocks-menu { border-top: 1px dashed rgba(0,0,0,0.1); }
+        
+        .btn-add-block {
+            background: var(--block-bg); border: 1px solid rgba(255,255,255,0.05); color: var(--text-color);
+            padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; cursor: pointer; transition: 0.2s;
+        }
+        .btn-add-block:hover { background: var(--primary-color); color: #fff; }
+
+        /* ----- BOTÕES PRINCIPAIS GLOBAIS ----- */
+        .btn-action-hub {
+            background-color: var(--surface-color);
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            padding: 14px;
+            border-radius: var(--border-radius);
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            box-shadow: var(--shadow);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.95rem;
+        }
+        .btn-action-hub:hover {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            transform: translateY(-2px);
+        }
+
+        /* Estilização Adaptável para Popups do SweetAlert2 */
+        .swal2-popup {
+            background: var(--surface-color) !important;
+            color: var(--text-color) !important;
+            border-radius: var(--border-radius) !important;
+            transition: background-color 0.3s;
+        }
+        .swal2-title { color: var(--primary-color) !important; }
+        .swal2-html-container { color: var(--text-color) !important; padding: 10px 0 !important; }
+        .swal2-input {
+            color: var(--text-color) !important;
+            background: var(--bg-color) !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            border-radius: 8px !important;
+        }
+        body.light-mode .swal2-input {
+            border: 1px solid rgba(0,0,0,0.1) !important;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1><i class="fas fa-cubes"></i> Painel Modular</h1>
+        <div class="header-actions">
+            <a href="tutorial.html" target="_self" class="btn-header" title="Abrir Tutorial">
+                <i class="fa-regular fa-circle-question"></i>
+            </a>
+            <a href="ia.html" class="btn-header" title="Assistente IA">
+                <i class="fas fa-robot"></i>
+            </a>
+            <button id="edit-toggle" class="btn-header" title="Editar Estrutura">
+                <i class="fas fa-pen-to-square"></i>
+            </button>
+            <button id="settings-btn" class="btn-header" onclick="openSettings()" title="Configurações do Painel">
+                <i class="fas fa-gear"></i>
+            </button>
+            <button id="delete-cat-btn" class="btn-header" style="display: none;" onclick="deleteCategory()" title="Apagar Categoria">
+                <i class="fas fa-trash-can"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        
+        <div id="notification" class="notification-banner">
+            <i class="fas fa-triangle-exclamation"></i> Atenção! Você tem itens com prazo para hoje ou amanhã!
+        </div>
+
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="Pesquisar em títulos ou descrições..." oninput="renderItems()">
+        </div>
+
+        <div class="categories-wrapper">
+            <div class="categories-container" id="categories-menu"></div>
+            <button class="btn-add-cat" onclick="promptAddCategory()" title="Criar Nova Categoria"><i class="fas fa-plus"></i></button>
+        </div>
+
+        <div class="content-area">
+            <div class="category-header">
+                <h2 id="current-category">Carregando...</h2>
+            </div>
+            
+            <div id="items-list"></div>
+            
+            <button id="add-item-btn" class="btn-action-hub" style="display: none;" onclick="addItem()">
+                <i class="fas fa-folder-plus"></i> Adicionar Novo Grupo
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // --- EFEITOS SONOROS (WEB AUDIO API DO HUB DA CASA) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            if (type === 'click') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(300, now + 0.05);
+                gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now); osc.stop(now + 0.05);
+            } else if (type === 'success') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(523.25, now); osc.frequency.setValueAtTime(659.25, now + 0.1);
+                gain.gain.setValueAtTime(0, now); gain.gain.linearRampToValueAtTime(0.2, now + 0.05); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now); osc.stop(now + 0.3);
+            } else if (type === 'delete') {
+                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, now); osc.frequency.linearRampToValueAtTime(40, now + 0.2);
+                gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now); osc.stop(now + 0.2);
+            }
+            osc.connect(gain); gain.connect(audioCtx.destination);
+        }
+
+        // --- CARREGAMENTO INICIAL DO TEMA ---
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        if (savedTheme === 'light') {
+            document.body.classList.add('light-mode');
+        }
+
+        // --- POPUP DE CONFIGURAÇÕES (ENGRENAGEM) ---
+        async function openSettings() {
+            playSound('click');
+            const isLightActive = document.body.classList.contains('light-mode');
+            
+            await Swal.fire({
+                title: '<i class="fas fa-gear"></i> Configurações',
+                html: `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 5px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <span style="font-weight: 600; font-size: 0.95rem;">Modo Claro (Light Mode)</span>
+                        <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                            <input type="checkbox" id="theme-toggle-checkbox" ${isLightActive ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;">
+                            <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; transition: .3s; border-radius: 24px;" id="slider-bg"></span>
+                        </label>
+                    </div>
+                    <p style="font-size: 0.75rem; color: var(--text-muted); text-align: left; margin-top: 10px; line-height: 1.4;">
+                        * Esta preferência visual será compartilhada automaticamente com a IA e a página do tutorial.
+                    </p>
+                `,
+                showCancelButton: false,
+                confirmButtonText: 'Fechar',
+                confirmButtonColor: 'var(--primary-color)',
+                didOpen: () => {
+                    const checkbox = document.getElementById('theme-toggle-checkbox');
+                    const sliderBg = document.getElementById('slider-bg');
+                    
+                    sliderBg.style.backgroundColor = checkbox.checked ? 'var(--primary-color)' : '#555';
+                    
+                    checkbox.addEventListener('change', (e) => {
+                        if (e.target.checked) {
+                            document.body.classList.add('light-mode');
+                            localStorage.setItem('theme', 'light');
+                            sliderBg.style.backgroundColor = 'var(--primary-color)';
+                        } else {
+                            document.body.classList.remove('light-mode');
+                            localStorage.setItem('theme', 'dark');
+                            sliderBg.style.backgroundColor = '#555';
+                        }
+                        playSound('click');
+                    });
+                }
+            });
+        }
+
+        // --- SISTEMA DE DADOS (LOCALSTORAGE) ---
+        const defaultData = { 
+            "Projetos": [
+                [ 
+                    { type: "titulo", value: "🚀 Comece por aqui!" },
+                    { type: "sobre", value: "Este é seu painel modular. Ative o ícone de caneta no topo para configurar e adicionar blocos." }
+                ]
+            ] 
+        };
+        
+        let database = JSON.parse(localStorage.getItem('painel_modular_v2')) || defaultData;
+        let currentCategory = Object.keys(database)[0] || "";
+        let isEditMode = false;
+
+        function saveData() {
+            try {
+                localStorage.setItem('painel_modular_v2', JSON.stringify(database));
+                checkNotifications();
+            } catch (e) {
+                Swal.fire('Erro', 'O armazenamento local está cheio. Remova imagens ou anexos antigos.', 'error');
+            }
+        }
+
+        // --- MODO DE EDIÇÃO ATIVAR/DESATIVAR ---
+        document.getElementById('edit-toggle').addEventListener('click', (e) => {
+            playSound('click');
+            isEditMode = !isEditMode;
+            
+            const btn = document.getElementById('edit-toggle');
+            if(isEditMode) {
+                btn.classList.add('active');
+                btn.innerHTML = '<i class="fas fa-floppy-disk"></i>';
+            } else {
+                btn.classList.remove('active');
+                btn.innerHTML = '<i class="fas fa-pen-to-square"></i>';
+            }
+            
+            document.getElementById('add-item-btn').style.display = isEditMode ? 'flex' : 'none';
+            document.getElementById('delete-cat-btn').style.display = (isEditMode && currentCategory) ? 'inline-block' : 'none';
+            
+            render();
+        });
+
+        // --- INTERAÇÕES DE CATEGORIA (SWEETALERT2 MODALS) ---
+        async function promptAddCategory() {
+            playSound('click');
+            const { value: name } = await Swal.fire({
+                title: 'Nova Categoria',
+                input: 'text',
+                inputPlaceholder: 'Nome da categoria...',
+                showCancelButton: true,
+                confirmButtonColor: 'var(--primary-color)',
+                cancelButtonColor: '#2d2d2d',
+                confirmButtonText: 'Criar'
+            });
+
+            if (name && name.trim()) {
+                const catName = name.trim();
+                if (!database[catName]) {
+                    database[catName] = [];
+                    currentCategory = catName;
+                    saveData();
+                    render();
+                    playSound('success');
+                } else {
+                    Swal.fire('Ops', 'Essa categoria já existe.', 'warning');
+                }
+            }
+        }
+
+        async function deleteCategory() {
+            playSound('click');
+            const result = await Swal.fire({
+                title: 'Apagar Categoria?',
+                text: `Isso excluirá a categoria "${currentCategory}" e todos os grupos dentro dela em definitivo.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: 'var(--error-color)',
+                cancelButtonColor: '#2d2d2d',
+                confirmButtonText: 'Sim, apagar!'
+            });
+
+            if(result.isConfirmed) {
+                delete database[currentCategory];
+                currentCategory = Object.keys(database)[0] || "";
+                saveData();
+                render();
+                playSound('delete');
+                if(!currentCategory) document.getElementById('delete-cat-btn').style.display = 'none';
+            }
+        }
+
+        // --- REORDENAÇÃO DE CATEGORIAS (HORIZONTAL) ---
+        function moveCategory(direction) {
+            const keys = Object.keys(database);
+            const index = keys.indexOf(currentCategory);
+            if (index === -1) return;
+            
+            const newIndex = index + direction;
+            if (newIndex >= 0 && newIndex < keys.length) {
+                playSound('click');
+                [keys[index], keys[newIndex]] = [keys[newIndex], keys[index]];
+                
+                const newDatabase = {};
+                keys.forEach(key => {
+                    newDatabase[key] = database[key];
+                });
+                
+                database = newDatabase;
+                saveData();
+                render();
+                playSound('success');
+            }
+        }
+
+        // --- OPERAÇÕES DOS GRUPOS E BLOCOS ---
+        function addItem() {
+            if(!currentCategory) return;
+            playSound('click');
+            database[currentCategory].push([ { type: "titulo", value: "Novo Grupo Modular" } ]);
+            saveData();
+            render();
+        }
+
+        async function deleteItem(itemIndex) {
+            playSound('click');
+            const result = await Swal.fire({
+                title: 'Excluir Grupo?',
+                text: "Todos os blocos contidos aqui serão removidos.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: 'var(--error-color)',
+                confirmButtonText: 'Excluir'
+            });
+
+            if(result.isConfirmed) {
+                database[currentCategory].splice(itemIndex, 1);
+                saveData();
+                render();
+                playSound('delete');
+            }
+        }
+
+        function addBlock(itemIndex, type) {
+            playSound('click');
+            database[currentCategory][itemIndex].push({ type: type, value: "" });
+            saveData();
+            render();
+        }
+
+        function moveBlock(itemIndex, blockIndex, direction) {
+            const blocks = database[currentCategory][itemIndex];
+            if (direction === -1 && blockIndex > 0) {
+                [blocks[blockIndex], blocks[blockIndex - 1]] = [blocks[blockIndex - 1], blocks[blockIndex]];
+            } else if (direction === 1 && blockIndex < blocks.length - 1) {
+                [blocks[blockIndex], blocks[blockIndex + 1]] = [blocks[blockIndex + 1], blocks[blockIndex]];
+            }
+            saveData();
+            render();
+        }
+
+        function deleteBlock(itemIndex, blockIndex) {
+            database[currentCategory][itemIndex].splice(blockIndex, 1);
+            saveData();
+            render();
+            playSound('delete');
+        }
+
+        function updateBlockValue(itemIndex, blockIndex, value) {
+            database[currentCategory][itemIndex][blockIndex].value = value;
+            localStorage.setItem('painel_modular_v2', JSON.stringify(database));
+        }
+
+        // --- GERADOR DE AGENDAMENTO .ICS NATIVO ---
+        function downloadIcs(dateStr, groupTitle) {
+            playSound('click');
+            const partes = dateStr.split('/');
+            if (partes.length < 2) {
+                Swal.fire('Aviso', 'Defina uma data válida em formato DD/MM para agendar.', 'warning');
+                return;
+            }
+            
+            const dia = partes[0].padStart(2, '0');
+            const mes = partes[1].padStart(2, '0');
+            const ano = new Date().getFullYear(); 
+            const tituloEvento = groupTitle || "Prazo do Painel Modular";
+            
+            const icsContent = [
+                "BEGIN:VCALENDAR",
+                "VERSION:2.0",
+                "PRODID:-//Painel Modular//NONSGML Event//PT",
+                "BEGIN:VEVENT",
+                `DTSTART:${ano}${mes}${dia}T090000`,
+                `DTEND:${ano}${mes}${dia}T100000`,
+                `SUMMARY:${tituloEvento}`,
+                "DESCRIPTION:Lembrete gerado automaticamente do seu Painel Modular.",
+                "END:VEVENT",
+                "END:VCALENDAR"
+            ].join("\r\n");
+            
+            const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `evento_${dia}_${mes}.ics`;
+            link.click();
+            playSound('success');
+        }
+
+        // --- VISUALIZADOR / EDITOR NATÍVO AVANÇADO DE IMAGEM (PINÇA, MOVIMENTO LIVRE E DESFAZER) ---
+        async function openImageModal(itemIndex, blockIndex, imgIndex) {
+            playSound('click');
+            const block = database[currentCategory][itemIndex][blockIndex];
+            const images = block.value.split('\n').filter(i => i.trim() !== '');
+            const imgSrc = images[imgIndex];
+
+            let toolbarHtml = '';
+            if (isEditMode) {
+                toolbarHtml = `
+                    <div style="display:flex; gap:6px; justify-content:center; margin-bottom:12px; flex-wrap:wrap; align-items:center;">
+                        <button id="img-tool-pan" class="btn-control" style="background:var(--block-bg); padding:6px 12px; border-radius:6px; font-weight:600;" onclick="setImageTool('pan')"><i class="fas fa-hand"></i> Mover</button>
+                        <button id="img-tool-draw" class="btn-control" style="background:var(--primary-color); color:#fff; padding:6px 12px; border-radius:6px; font-weight:600;" onclick="setImageTool('draw')"><i class="fas fa-pencil"></i> Desenhar</button>
+                        <button id="img-tool-text" class="btn-control" style="background:var(--block-bg); padding:6px 12px; border-radius:6px; font-weight:600;" onclick="setImageTool('text')"><i class="fas fa-font"></i> Texto</button>
+                        <input type="color" id="img-render-color" value="#ff5722" style="border:none; width:30px; height:30px; cursor:pointer; background:none;">
+                        <button class="btn-control" style="background:var(--block-bg); padding:6px 12px; border-radius:6px;" onclick="undoImageCanvas()"><i class="fas fa-reply"></i> Voltar</button>
+                        <button class="btn-control danger" style="background:var(--block-bg); padding:6px 12px; border-radius:6px;" onclick="clearImageCanvas()"><i class="fas fa-trash-can"></i> Limpar</button>
+                    </div>
+                `;
+            } else {
+                toolbarHtml = `
+                    <div style="text-align:center; margin-bottom:8px; font-size:0.85rem; color:var(--text-muted);">
+                        Use dois dedos (efeito pinça) ou arraste para mover e dar zoom livremente.
+                    </div>
+                `;
+            }
+
+            await Swal.fire({
+                title: isEditMode ? 'Editar Imagem' : 'Visualizador de Imagem',
+                html: `
+                    ${toolbarHtml}
+                    <div id="canvas-viewport" style="position:relative; width:100%; height:58vh; border:1px solid rgba(255,255,255,0.1); border-radius:8px; overflow:hidden; background:#0b0b0b; display:flex; justify-content:center; align-items:center; touch-action:none;">
+                        <canvas id="editing-canvas" style="position:absolute; transform-origin: center center; display:block;"></canvas>
+                    </div>
+                `,
+                width: '95%',
+                showCancelButton: true,
+                confirmButtonText: isEditMode ? 'Salvar Alterações' : 'Fechar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: 'var(--primary-color)',
+                didOpen: () => {
+                    const canvas = document.getElementById('editing-canvas');
+                    const ctx = canvas.getContext('2d');
+                    const viewport = document.getElementById('canvas-viewport');
+                    const img = new Image();
+                    img.src = imgSrc;
+
+                    let activeTool = isEditMode ? 'draw' : 'pan';
+                    let historyStack = [];
+                    
+                    // Estados para Controle de Transformação (Zoom / Arrasto Livre)
+                    let scale = 1;
+                    let offsetX = 0;
+                    let offsetY = 0;
+                    
+                    let isDragging = false;
+                    let isDrawing = false;
+                    let startX = 0, startY = 0;
+                    
+                    // Estados para o Gestor de Pinça de Dois Dedos (Mobile)
+                    let initialPinchDist = 0;
+                    let initialScale = 1;
+                    let centerStartX = 0, centerStartY = 0;
+                    let initialOffsetX = 0, initialOffsetY = 0;
+
+                    img.onload = () => {
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        ctx.drawImage(img, 0, 0);
+                        
+                        // Ajuste inicial ideal da imagem dentro da janela do visualizador
+                        const scaleX = viewport.clientWidth / img.width;
+                        const scaleY = viewport.clientHeight / img.height;
+                        scale = Math.min(scaleX, scaleY, 1) * 0.95;
+                        updateTransform();
+                    };
+
+                    function updateTransform() {
+                        canvas.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+                        if (activeTool === 'pan') {
+                            canvas.style.cursor = isDragging ? 'grabbing' : 'grab';
+                        } else {
+                            canvas.style.cursor = 'crosshair';
+                        }
+                    }
+
+                    window.setImageTool = (tool) => {
+                        activeTool = tool;
+                        ['pan', 'draw', 'text'].forEach(t => {
+                            const btn = document.getElementById(`img-tool-${t}`);
+                            if(btn) {
+                                btn.style.background = tool === t ? 'var(--primary-color)' : 'var(--block-bg)';
+                                btn.style.color = tool === t ? '#fff' : 'var(--text-color)';
+                            }
+                        });
+                        updateTransform();
+                    };
+
+                    if(isEditMode) window.setImageTool('draw');
+
+                    window.clearImageCanvas = () => {
+                        historyStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, 0, 0);
+                    };
+
+                    window.undoImageCanvas = () => {
+                        if (historyStack.length > 0) {
+                            let state = historyStack.pop();
+                            ctx.putImageData(state, 0, 0);
+                        }
+                    };
+
+                    // Calcula coordenadas convertendo as transformações CSS de escala/arrasto de volta para a tela nativa do Canvas
+                    function getCoords(clientX, clientY) {
+                        const rect = canvas.getBoundingClientRect();
+                        return {
+                            x: (clientX - rect.left) * (canvas.width / rect.width),
+                            y: (clientY - rect.top) * (canvas.height / rect.height)
+                        };
+                    }
+
+                    // --- TRATAMENTO NATIVO DE GESTOS E MULTITOUCH (PINÇA) ---
+                    viewport.addEventListener('touchstart', (e) => {
+                        if (e.touches.length === 2) {
+                            // Iniciando modo pinça
+                            const t1 = e.touches[0];
+                            const t2 = e.touches[1];
+                            const dx = t1.clientX - t2.clientX;
+                            const dy = t1.clientY - t2.clientY;
+                            initialPinchDist = Math.sqrt(dx*dx + dy*dy);
+                            initialScale = scale;
+                            
+                            centerStartX = (t1.clientX + t2.clientX) / 2;
+                            centerStartY = (t1.clientY + t2.clientY) / 2;
+                            initialOffsetX = offsetX;
+                            initialOffsetY = offsetY;
+                            
+                            isDragging = false;
+                            isDrawing = false;
+                        } else if (e.touches.length === 1) {
+                            const touch = e.touches[0];
+                            handleStart(touch.clientX, touch.clientY);
+                        }
+                    }, { passive: false });
+
+                    viewport.addEventListener('touchmove', (e) => {
+                        if (e.touches.length === 2) {
+                            e.preventDefault();
+                            const t1 = e.touches[0];
+                            const t2 = e.touches[1];
+                            const dx = t1.clientX - t2.clientX;
+                            const dy = t1.clientY - t2.clientY;
+                            const dist = Math.sqrt(dx*dx + dy*dy);
+                            
+                            scale = initialScale * (dist / initialPinchDist);
+                            scale = Math.max(0.2, Math.min(scale, 10)); // Limites de zoom
+                            
+                            const currentCenterX = (t1.clientX + t2.clientX) / 2;
+                            const currentCenterY = (t1.clientY + t2.clientY) / 2;
+                            
+                            offsetX = initialOffsetX + (currentCenterX - centerStartX);
+                            offsetY = initialOffsetY + (currentCenterY - centerStartY);
+                            updateTransform();
+                        } else if (e.touches.length === 1 && !initialPinchDist) {
+                            const touch = e.touches[0];
+                            handleMove(touch.clientX, touch.clientY, e);
+                        }
+                    }, { passive: false });
+
+                    viewport.addEventListener('touchend', (e) => {
+                        if (e.touches.length < 2) initialPinchDist = 0;
+                        handleEnd();
+                    });
+
+                    // Suporte paralelo para cliques e arrastos tradicionais no Computador (Mouse)
+                    viewport.addEventListener('mousedown', (e) => { handleStart(e.clientX, e.clientY); });
+                    viewport.addEventListener('mousemove', (e) => { handleMove(e.clientX, e.clientY, e); });
+                    window.addEventListener('mouseup', handleEnd);
+
+                    function handleStart(clientX, clientY) {
+                        const coords = getCoords(clientX, clientY);
+                        if (activeTool === 'pan') {
+                            isDragging = true;
+                            startX = clientX - offsetX;
+                            startY = clientY - offsetY;
+                            updateTransform();
+                        } else if (activeTool === 'draw' && isEditMode) {
+                            isDrawing = true;
+                            // Guarda o estado atual no histórico antes do novo traço começar
+                            historyStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+                            if(historyStack.length > 25) historyStack.shift();
+
+                            ctx.beginPath();
+                            ctx.moveTo(coords.x, coords.y);
+                            
+                            const pickedColor = document.getElementById('img-render-color').value;
+                            ctx.strokeStyle = pickedColor;
+                            ctx.lineWidth = Math.max(6, canvas.width / 90);
+                            ctx.lineCap = 'round';
+                            ctx.lineJoin = 'round';
+                            ctx.globalAlpha = 0.55; // Linha bonita levemente semi-transparente estilo marcação
+                        } else if (activeTool === 'text' && isEditMode) {
+                            // Inserção nativa de anotação de texto na posição clicada
+                            setTimeout(() => {
+                                const userText = prompt("Digite a anotação para esta posição:");
+                                if (userText && userText.trim()) {
+                                    historyStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+                                    const pickedColor = document.getElementById('img-render-color').value;
+                                    ctx.globalAlpha = 1.0; // Texto perfeitamente opaco para leitura limpa
+                                    ctx.fillStyle = pickedColor;
+                                    const computedFontSize = Math.max(18, canvas.width / 32);
+                                    ctx.font = `bold ${computedFontSize}px Arial`;
+                                    ctx.textBaseline = 'middle';
+                                    ctx.fillText(userText.trim(), coords.x, coords.y);
+                                }
+                            }, 50);
+                        }
+                    }
+
+                    function handleMove(clientX, clientY, event) {
+                        if (isDragging && activeTool === 'pan') {
+                            offsetX = clientX - startX;
+                            offsetY = clientY - startY;
+                            updateTransform();
+                        } else if (isDrawing && activeTool === 'draw' && isEditMode) {
+                            event.preventDefault();
+                            const coords = getCoords(clientX, clientY);
+                            ctx.lineTo(coords.x, coords.y);
+                            ctx.stroke();
+                        }
+                    }
+
+                    function handleEnd() {
+                        isDragging = false;
+                        isDrawing = false;
+                        if(canvas) canvas.style.cursor = activeTool === 'pan' ? 'grab' : 'crosshair';
+                    }
+                },
+                preConfirm: () => {
+                    if (isEditMode) {
+                        const canvas = document.getElementById('editing-canvas');
+                        const ctx = canvas.getContext('2d');
+                        ctx.globalAlpha = 1.0; // Reseta transparência global ao salvar a imagem final
+                        return canvas.toDataURL('image/jpeg', 0.85);
+                    }
+                    return null;
+                }
+            }).then((output) => {
+                delete window.setImageTool;
+                delete window.clearImageCanvas;
+                delete window.undoImageCanvas;
+
+                if (output.isConfirmed && isEditMode && output.value) {
+                    images[imgIndex] = output.value;
+                    block.value = images.join('\n');
+                    saveData();
+                    render();
+                    playSound('success');
+                }
+            });
+        }
+
+        // --- ÁREA DE COMPONENTIZAÇÃO DE PDF / VISUALIZADOR DE ARQUIVOS ---
+        function openFileViewer(itemIndex, blockIndex, fileIndex) {
+            playSound('click');
+            const block = database[currentCategory][itemIndex][blockIndex];
+            const files = block.value.split('\n').filter(f => f.trim() !== '');
+            const fileData = files[fileIndex].split('|||');
+            
+            const name = fileData[0];
+            const base64 = fileData[1];
+            
+            let contentHtml = '';
+            
+            if (base64.includes('data:application/pdf')) {
+                contentHtml = `<iframe src="${base64}" width="100%" height="500px" style="border:none; border-radius:8px;"></iframe>`;
+            } else if (base64.includes('data:image/')) {
+                contentHtml = `<div style="overflow:auto; max-height:500px; display:flex; justify-content:center;"><img src="${base64}" style="max-width:100%; border-radius:8px; object-fit:contain;"></div>`;
+            } else {
+                contentHtml = `<iframe src="${base64}" width="100%" height="500px" style="border:none; border-radius:8px; background:#ffffff;"></iframe>`;
+            }
+
+            Swal.fire({
+                title: `<span style="font-size:1rem; word-break:break-all;"><i class="fa-regular fa-file-pdf"></i> ${name}</span>`,
+                html: contentHtml,
+                width: '95%',
+                showConfirmButton: true,
+                confirmButtonText: 'Fechar',
+                confirmButtonColor: 'var(--primary-color)',
+                showCancelButton: true,
+                cancelButtonText: '<i class="fas fa-download"></i> Baixar Original',
+                cancelButtonColor: 'var(--secondary-color)',
+            }).then((result) => {
+                if (result.dismiss === Swal.DismissReason.cancel) {
+                    const link = document.createElement('a');
+                    link.href = base64;
+                    link.download = name;
+                    link.click();
+                }
+            });
+        }
+
+        // --- COMPRESSÃO DE IMAGENS E ARQUIVOS (BASE64) ---
+        function handleImageUpload(inputEle, itemIndex, blockIndex) {
+            const files = inputEle.files;
+            if (files.length === 0) return;
+
+            let base64Strings = [];
+            let filesProcessed = 0;
+
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 800; 
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        base64Strings.push(canvas.toDataURL('image/jpeg', 0.7));
+                        filesProcessed++;
+                        
+                        if (filesProcessed === files.length) {
+                            const existing = database[currentCategory][itemIndex][blockIndex].value;
+                            const newVal = existing ? existing + '\n' + base64Strings.join('\n') : base64Strings.join('\n');
+                            
+                            updateBlockValue(itemIndex, blockIndex, newVal);
+                            playSound('success');
+                            render(); 
+                        }
+                    }
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function handleFileUpload(inputEle, itemIndex, blockIndex) {
+            const files = inputEle.files;
+            if (files.length === 0) return;
+
+            let fileStrings = [];
+            let filesProcessed = 0;
+
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    fileStrings.push(`${file.name}|||${e.target.result}`);
+                    filesProcessed++;
+
+                    if(filesProcessed === files.length) {
+                        const existing = database[currentCategory][itemIndex][blockIndex].value;
+                        const newVal = existing ? existing + '\n' + fileStrings.join('\n') : fileStrings.join('\n');
+                        updateBlockValue(itemIndex, blockIndex, newVal);
+                        playSound('success');
+                        render();
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function handleDateInput(inputEle, itemIndex, blockIndex) {
+            let val = inputEle.value.replace(/\D/g, ''); 
+            if (val.length >= 2) {
+                val = val.substring(0, 2) + '/' + val.substring(2, 4);
+            }
+            inputEle.value = val;
+            updateBlockValue(itemIndex, blockIndex, val);
+        }
+
+        function handleListTextarea(event, ele, itemIndex, blockIndex) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); 
+                const start = ele.selectionStart;
+                const end = ele.selectionEnd;
+                const value = ele.value;
+                
+                const newText = value.substring(0, start) + "\n- " + value.substring(end);
+                ele.value = newText;
+                
+                ele.selectionStart = ele.selectionEnd = start + 3; 
+                updateBlockValue(itemIndex, blockIndex, newText);
+            }
+        }
+
+        // --- RENDERIZADORES COMPONENTIZADOS ---
+        function renderCategories() {
+            const menu = document.getElementById('categories-menu');
+            menu.innerHTML = '';
+            Object.keys(database).forEach(cat => {
+                const btn = document.createElement('button');
+                btn.className = `category-btn ${cat === currentCategory ? 'active' : ''}`;
+                btn.innerText = cat;
+                btn.onclick = () => { 
+                    playSound('click');
+                    currentCategory = cat; 
+                    document.getElementById('delete-cat-btn').style.display = isEditMode ? 'inline-block' : 'none';
+                    render(); 
+                };
+                menu.appendChild(btn);
+            });
+        }
+
+        function renderBlocksViewMode(block, itemIndex, blockIndex, groupTitle) {
+            if (!block.value.trim()) return '';
+            switch(block.type) {
+                case 'titulo': return `<div class="view-titulo">${block.value}</div>`;
+                case 'data': 
+                    return `
+                        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 2px;">
+                            <div class="view-data"><i class="fa-regular fa-calendar"></i> Prazo: ${block.value}</div>
+                            <button class="btn-control" style="background: var(--block-bg); color: var(--secondary-color); border: 1px solid rgba(3, 218, 198, 0.2); padding: 5px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: 0.2s;" onclick="downloadIcs('${block.value}', '${groupTitle.replace(/'/g, "\\'")}')">
+                                <i class="fa-solid fa-calendar-plus"></i> Agendar
+                            </button>
+                        </div>
+                    `;
+                case 'sobre': return `<div class="view-sobre">${block.value}</div>`;
+                case 'topicos': 
+                    const lis = block.value.split('\n')
+                                     .filter(t => t.trim() !== '' && t.trim() !== '-')
+                                     .map(t => `<li>${t.replace(/^- /, '')}</li>`).join('');
+                    return `<ul class="view-topicos">${lis}</ul>`;
+                case 'imagem':
+                    return block.value.split('\n')
+                                      .filter(i => i.trim() !== '')
+                                      .map((i, imgIndex) => `<img src="${i}" class="view-imagem" alt="Anexo" style="cursor:pointer;" onclick="openImageModal(${itemIndex}, ${blockIndex}, ${imgIndex})">`).join('');
+                case 'arquivo':
+                    const files = block.value.split('\n').filter(f => f.trim() !== '');
+                    let filesHtml = '<div class="file-list-view">';
+                    files.forEach((f, fileIndex) => {
+                        const parts = f.split('|||');
+                        if(parts.length === 2) {
+                            filesHtml += `
+                                <button onclick="openFileViewer(${itemIndex}, ${blockIndex}, ${fileIndex})" class="file-link">
+                                    <i class="fa-regular fa-file-lines" style="color:var(--secondary-color)"></i> ${parts[0]}
+                                </button>
+                            `;
+                        }
+                    });
+                    filesHtml += '</div>';
+                    return filesHtml;
+                default: return '';
+            }
+        }
+
+        function renderBlocksEditMode(block, itemIndex, blockIndex) {
+            let inputHtml = '';
+            if (block.type === 'data') {
+                inputHtml = `<input type="text" placeholder="DD/MM" value="${block.value}" oninput="handleDateInput(this, ${itemIndex}, ${blockIndex})" maxlength="5">`;
+            } else if (block.type === 'topicos') {
+                inputHtml = `<textarea placeholder="Escreva e aperte Enter para gerar marcadores automaticamente..." onkeydown="handleListTextarea(event, this, ${itemIndex}, ${blockIndex})" oninput="updateBlockValue(${itemIndex}, ${blockIndex}, this.value)">${block.value}</textarea>`;
+            } else if (block.type === 'sobre') {
+                inputHtml = `<textarea placeholder="Detalhes textuais..." oninput="updateBlockValue(${itemIndex}, ${blockIndex}, this.value)">${block.value}</textarea>`;
+            } else if (block.type === 'imagem') {
+                const previewImgs = block.value.split('\n').filter(i => i.trim() !== '').map((i, imgIndex) => `<img src="${i}" style="width: 45px; height: 45px; object-fit: cover; border-radius: 6px; cursor:pointer;" onclick="openImageModal(${itemIndex}, ${blockIndex}, ${imgIndex})" title="Clique para editar">`).join('');
+                inputHtml = `
+                    <div style="display: flex; flex-direction:column; gap: 8px;">
+                        <input type="file" accept="image/*" multiple onchange="handleImageUpload(this, ${itemIndex}, ${blockIndex})" style="font-size:0.8rem; color: var(--text-muted)">
+                        ${previewImgs ? `<div style="display: flex; gap: 6px; flex-wrap: wrap;">${previewImgs}</div>` : ''}
+                    </div>
+                `;
+            } else if (block.type === 'arquivo') {
+                const uploadedFiles = block.value.split('\n').filter(f => f.trim() !== '');
+                let filesPreviewHtml = uploadedFiles.map(f => `<span style="font-size:0.75rem; background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px;">📎 ${f.split('|||')[0]}</span>`).join(' ');
+                inputHtml = `
+                    <div style="display: flex; flex-direction:column; gap: 8px;">
+                        <input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt" multiple onchange="handleFileUpload(this, ${itemIndex}, ${blockIndex})" style="font-size:0.8rem; color: var(--text-muted)">
+                        ${filesPreviewHtml ? `<div style="display: flex; gap: 4px; flex-wrap: wrap;">${filesPreviewHtml}</div>` : ''}
+                    </div>
+                `;
+            } else {
+                inputHtml = `<input type="text" placeholder="Digite o conteúdo..." value="${block.value}" oninput="updateBlockValue(${itemIndex}, ${blockIndex}, this.value)">`;
+            }
+
+            const typeNames = { 'titulo': 'Título', 'data': 'Prazo Limite', 'sobre': 'Descrição Textual', 'topicos': 'Lista de Tópicos', 'imagem': 'Mídia / Imagem', 'arquivo': 'Documentos (PDF/Word)' };
+
+            return `
+                <div class="block-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="block-type-badge">${typeNames[block.type]}</span>
+                        <div class="block-controls">
+                            <button class="btn-control" onclick="moveBlock(${itemIndex}, ${blockIndex}, -1)"><i class="fas fa-angle-up"></i></button>
+                            <button class="btn-control" onclick="moveBlock(${itemIndex}, ${blockIndex}, 1)"><i class="fas fa-angle-down"></i></button>
+                            <button class="btn-control danger" onclick="deleteBlock(${itemIndex}, ${blockIndex})"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                    ${inputHtml}
+                </div>
+            `;
+        }
+
+        function renderItems() {
+            const list = document.getElementById('items-list');
+            list.innerHTML = '';
+            
+            // Montagem inteligente do cabeçalho da categoria com setas de movimentação lateral (< e >)
+            const catHeaderElement = document.getElementById('current-category');
+            if (isEditMode && currentCategory) {
+                catHeaderElement.innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                        <span>${currentCategory}</span>
+                        <div style="display: flex; gap: 6px;">
+                            <button class="btn-control" onclick="moveCategory(-1)" title="Mover Categoria para Esquerda" style="padding: 6px 10px; background: var(--block-bg);"><i class="fas fa-arrow-left"></i></button>
+                            <button class="btn-control" onclick="moveCategory(1)" title="Mover Categoria para Direita" style="padding: 6px 10px; background: var(--block-bg);"><i class="fas fa-arrow-right"></i></button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                catHeaderElement.textContent = currentCategory || "Crie ou selecione uma categoria";
+            }
+            
+            if(!currentCategory || !database[currentCategory]) return;
+
+            const searchQuery = document.getElementById('search-input').value.toLowerCase().trim();
+
+            database[currentCategory].forEach((itemBlocks, itemIndex) => {
+                if (searchQuery) {
+                    const matchesSearch = itemBlocks.some(block => {
+                        if (block.type === 'arquivo') {
+                            return block.value.split('\n').some(f => f.split('|||')[0].toLowerCase().includes(searchQuery));
+                        }
+                        return block.value.toLowerCase().includes(searchQuery);
+                    });
+                    if (!matchesSearch) return; 
+                }
+
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'item-group';
+                
+                let innerHTML = '';
+                
+                const titleBlock = itemBlocks.find(b => b.type === 'titulo');
+                const groupTitle = titleBlock ? titleBlock.value : "Prazo do Painel Modular";
+                
+                if (isEditMode) {
+                    itemBlocks.forEach((block, blockIndex) => {
+                        innerHTML += renderBlocksEditMode(block, itemIndex, blockIndex);
+                    });
+                    
+                    innerHTML += `
+                        <div class="add-blocks-menu">
+                            <button class="btn-add-block" onclick="addBlock(${itemIndex}, 'titulo')">+ Título</button>
+                            <button class="btn-add-block" onclick="addBlock(${itemIndex}, 'data')">+ Data</button>
+                            <button class="btn-add-block" onclick="addBlock(${itemIndex}, 'sobre')">+ Descrição</button>
+                            <button class="btn-add-block" onclick="addBlock(${itemIndex}, 'topicos')">+ Tópicos</button>
+                            <button class="btn-add-block" onclick="addBlock(${itemIndex}, 'imagem')">+ Imagem</button>
+                            <button class="btn-add-block" onclick="addBlock(${itemIndex}, 'arquivo')">+ Arquivo</button>
+                            <button class="btn-add-block" style="border-color:var(--error-color); color:var(--error-color); margin-left: auto;" onclick="deleteItem(${itemIndex})"><i class="fas fa-trash-can"></i> Grupo</button>
+                        </div>
+                    `;
+                } else {
+                    if(itemBlocks.length === 0) innerHTML = `<p style="color: var(--text-muted); font-style: italic; font-size:0.9rem;">Grupo sem blocos.</p>`;
+                    itemBlocks.forEach((block, blockIndex) => {
+                        innerHTML += renderBlocksViewMode(block, itemIndex, blockIndex, groupTitle);
+                    });
+                }
+                
+                groupDiv.innerHTML = innerHTML;
+                list.appendChild(groupDiv);
+            });
+        }
+
+        // --- MONITOR DE PRAZOS (SISTEMA DE NOTIFICAÇÕES GLOBAIS) ---
+        function checkNotifications() {
+            let temAviso = false;
+            const hoje = new Date();
+            
+            Object.values(database).forEach(categoria => {
+                categoria.forEach(item => {
+                    item.forEach(block => {
+                        if (block.type === 'data' && block.value.includes('/')) {
+                            const partes = block.value.split('/');
+                            if(partes.length >= 2 && partes[1].length === 2) {
+                                const dia = parseInt(partes[0]);
+                                const mes = parseInt(partes[1]);
+                                const dataLimite = new Date(hoje.getFullYear(), mes - 1, dia);
+                                const difDias = Math.ceil((dataLimite - hoje) / (1000 * 3600 * 24));
+                                
+                                if (difDias === 1 || difDias === 0) temAviso = true; 
+                            }
+                        }
+                    });
+                });
+            });
+
+            document.getElementById('notification').style.display = temAviso ? 'flex' : 'none';
+        }
+
+        function render() {
+            renderCategories();
+            renderItems();
+        }
+
+        // --- BOOT ---
+        render();
+        checkNotifications();
+    </script>
+</body>
+</html>
