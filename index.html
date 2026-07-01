@@ -555,7 +555,7 @@
             }
             
             document.getElementById('add-item-btn').style.display = isEditMode ? 'flex' : 'none';
-            document.getElementById('delete-cat-btn').style.display = (isEditMode && currentCategory) ? 'inline-block' : 'none';
+            document.getElementById('delete-cat-btn').style.display = (isEditMode && currentCategory && !currentCategory.startsWith('//')) ? 'inline-block' : 'none';
             
             render();
         });
@@ -575,10 +575,20 @@
             });
 
             if (name && name.trim()) {
-                const catName = name.trim();
+                let catName = name.trim();
+                const isSeparator = catName === '//';
+                
+                // Se for separador, cria um nome único para não dar conflito de repetição
+                if (isSeparator) {
+                    catName = '//_' + Date.now();
+                }
+
                 if (!database[catName]) {
                     database[catName] = [];
-                    currentCategory = catName;
+                    // Só muda a visualização atual se não for um separador
+                    if (!isSeparator) {
+                        currentCategory = catName;
+                    }
                     saveData();
                     render();
                     playSound('success');
@@ -602,7 +612,11 @@
 
             if(result.isConfirmed) {
                 delete database[currentCategory];
-                currentCategory = Object.keys(database)[0] || "";
+                
+                // Pega a primeira categoria que não seja um separador para definir como atual
+                const keys = Object.keys(database);
+                currentCategory = keys.find(k => k !== '//' && !k.startsWith('//_')) || "";
+                
                 saveData();
                 render();
                 playSound('delete');
@@ -635,7 +649,7 @@
 
         // --- OPERAÇÕES DOS GRUPOS E BLOCOS ---
         function addItem() {
-            if(!currentCategory) return;
+            if(!currentCategory || currentCategory.startsWith('//')) return;
             playSound('click');
             database[currentCategory].push([ { type: "titulo", value: "Novo Grupo Modular" } ]);
             saveData();
@@ -1164,9 +1178,27 @@
             const menu = document.getElementById('categories-menu');
             menu.innerHTML = '';
             Object.keys(database).forEach(cat => {
-                if (cat.trim() === '//') {
+                // Reconhece separadores (podem ser '//' ou '//_id')
+                if (cat.trim() === '//' || cat.trim().startsWith('//_')) {
                     const separator = document.createElement('div');
-                    separator.style.cssText = 'width: 2px; height: 22px; background-color: var(--text-muted); opacity: 0.3; margin: 0 6px; align-self: center; flex-shrink: 0;';
+                    separator.style.cssText = 'width: 2px; height: 22px; background-color: var(--text-muted); opacity: 0.3; margin: 0 6px; align-self: center; flex-shrink: 0; transition: 0.2s;';
+                    
+                    // Adição especial: Deixa o separador clicável e vermelho para apagá-lo no modo edição!
+                    if (isEditMode) {
+                        separator.style.cursor = 'pointer';
+                        separator.style.backgroundColor = 'var(--error-color)';
+                        separator.style.width = '8px';
+                        separator.style.borderRadius = '4px';
+                        separator.style.opacity = '1';
+                        separator.title = 'Excluir Separador';
+                        separator.onclick = () => {
+                            delete database[cat];
+                            saveData();
+                            render();
+                            playSound('delete');
+                        }
+                    }
+
                     menu.appendChild(separator);
                     return;
                 }
@@ -1276,7 +1308,7 @@
             list.innerHTML = '';
             
             const catHeaderElement = document.getElementById('current-category');
-            if (isEditMode && currentCategory) {
+            if (isEditMode && currentCategory && !currentCategory.startsWith('//')) {
                 catHeaderElement.innerHTML = `
                     <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
                         <span>${currentCategory}</span>
@@ -1290,7 +1322,7 @@
                 catHeaderElement.textContent = currentCategory || "Crie ou selecione uma categoria";
             }
             
-            if(!currentCategory || !database[currentCategory]) return;
+            if(!currentCategory || !database[currentCategory] || currentCategory.startsWith('//')) return;
 
             const searchQuery = document.getElementById('search-input').value.toLowerCase().trim();
 
