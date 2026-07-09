@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tutorial | Modu</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-color: #121212;
+            --surface-color: #1e1e1e;
+            --block-bg: #2d2d2d;
+            --primary-color: #bb86fc;
+            --primary-hover: #9a66da;
+            --secondary-color: #03dac6;
+            --error-color: #cf6679;
+            --text-color: #e1e1e1;
+            --text-muted: #888888;
+            --border-radius: 16px;
+            --alert-color: #ff5722;
+            --shadow: 0 6px 12px rgba(0,0,0,0.25);
+        }
+
+        /* ----- CONFIGURAÇÃO DO MODO CLARO (LIGHT MODE) ----- */
+        body.light-mode {
+            --bg-color: #f4f6f9;
+            --surface-color: #ffffff;
+            --block-bg: #f0f2f5;
+            --primary-color: #6200ee;
+            --primary-hover: #4b00b4;
+            --secondary-color: #018786;
+            --error-color: #b00020;
+            --text-color: #1a1a1a;
+            --text-muted: #666666;
+            --shadow: 0 4px 10px rgba(0,0,0,0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding-bottom: 40px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        header {
+            background-color: var(--surface-color);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            z-index: 10;
+            width: 100%;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        body.light-mode header {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        header h1 {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn-header {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 8px;
+            transition: color 0.2s, transform 0.1s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-header:hover { color: var(--primary-color); transform: scale(1.05); }
+
+        .main-container {
+            padding: 20px;
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* ----- ÁREA DE CONTEÚDO ----- */
+        .content-area {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .category-header h2 {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ----- GRUPOS DE ITENS (ESTILO PAINEL) ----- */
+        .item-group {
+            background-color: var(--surface-color);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+            transition: background-color 0.3s;
+        }
+        body.light-mode .item-group {
+            border: 1px solid rgba(0, 0, 0, 0.03);
+        }
+
+        /* ----- COMPONENTES VISUAIS DOS BLOCOS ----- */
+        .view-titulo { font-size: 1.25rem; font-weight: 700; color: var(--primary-color); }
+        .view-data { display: inline-flex; align-items: center; gap: 6px; background: var(--block-bg); padding: 5px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; color: var(--secondary-color); width: max-content; border: 1px solid rgba(3, 218, 198, 0.2); transition: background-color 0.3s; }
+        .view-sobre { line-height: 1.5; color: var(--text-color); white-space: pre-wrap; font-size: 0.95rem; }
+        .view-topicos { list-style: none; display: flex; flex-direction: column; gap: 6px; padding-left: 5px; }
+        .view-topicos li { font-size: 0.95rem; display: flex; align-items: flex-start; gap: 8px; color: var(--text-color); }
+        .view-topicos li::before { content: "•"; color: var(--primary-color); font-weight: bold; }
+
+        /* Destaque interno de textos */
+        .highlight {
+            background-color: var(--block-bg);
+            padding: 2px 6px;
+            border-radius: 6px;
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+        /* ----- BOTÕES PRINCIPAIS GLOBAIS ----- */
+        .btn-action-hub {
+            background-color: var(--surface-color);
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            padding: 14px;
+            border-radius: var(--border-radius);
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            box-shadow: var(--shadow);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            text-decoration: none;
+        }
+        .btn-action-hub:hover {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            transform: translateY(-2px);
+        }
+        .btn-primary-hub {
+            background-color: var(--primary-color);
+            color: #ffffff;
+        }
+        .btn-primary-hub:hover {
+            background-color: var(--primary-hover);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1><i class="fa-regular fa-circle-question"></i> Guias e Tutoriais</h1>
+        <div class="header-actions">
+            <a href="index.html" class="btn-header" title="Voltar ao Painel">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+        </div>
+    </header>
+
+    <div class="main-container">
+        
+        <div class="category-header">
+            <h2><i class="fas fa-cubes"></i> O Painel Modular</h2>
+        </div>
+
+        <div class="content-area">
+            
+            <div class="item-group">
+                <div class="view-titulo"><i class="fas fa-graduation-cap"></i> O Fluxo Ideal</div>
+                <div class="view-data" style="color: var(--primary-color); border-color: rgba(187, 134, 252, 0.2);"><i class="fas fa-bullseye"></i> Objetivo</div>
+                <div class="view-sobre">Transformar a bagunça de anotações soltas em um sistema claro para você não perder prazos.</div>
+                
+                <div class="view-data"><i class="fas fa-circle-info"></i> Como usar</div>
+                <ul class="view-topicos">
+                    <li>Anote o trabalho ou lembrete durante a aula.</li>
+                    <li>Crie um grupo correspondente no <span class="highlight">Modu</span> ao chegar em casa.</li>
+                    <li>Adicione <span class="highlight">Data</span> e organize as tarefas em <span class="highlight">Tópicos</span>.</li>
+                </ul>
+            </div>
+
+            <div class="item-group">
+                <div class="view-titulo"><i class="fas fa-pen-to-square"></i> Modo de Edição</div>
+                <div class="view-data"><i class="fas fa-gears"></i> Funcionalidade</div>
+                <div class="view-sobre">Alterna dinamicamente entre a visão de leitura (limpa e organizada) e a de modificação (para criar, reordenar ou remover blocos).</div>
+                
+                <div class="view-data"><i class="fas fa-circle-info"></i> Como usar</div>
+                <div class="view-sobre">Clique no ícone de caneta (<i class="fas fa-pen-to-square"></i>) no topo do cabeçalho. Faça as alterações nos cartões e, ao finalizar, clique no ícone de disquete (<i class="fas fa-floppy-disk"></i>) para salvar a estrutura.</div>
+            </div>
+
+            <div class="item-group">
+                <div class="view-titulo"><i class="fas fa-heading"></i> Bloco de Título</div>
+                <div class="view-data"><i class="fas fa-tag"></i> O que é</div>
+                <div class="view-sobre">Funciona como a "manchete" principal do seu grupo modular. Mantém as coleções de informações separadas e fáceis de escanear visualmente.</div>
+                
+                <div class="view-data"><i class="fas fa-circle-info"></i> Como usar</div>
+                <div class="view-sobre">Com o modo edição ativado, clique em <span class="highlight">+ Título</span> e insira um texto objetivo, como por exemplo: <i>"Pesquisa de Biologia"</i>.</div>
+            </div>
+
+            <div class="item-group">
+                <div class="view-titulo"><i class="fa-regular fa-calendar"></i> Bloco de Data</div>
+                <div class="view-data" style="color: var(--alert-color); border-color: rgba(255, 87, 34, 0.2);"><i class="fa-regular fa-clock"></i> O que é</div>
+                <div class="view-sobre">O cronômetro inteligente do painel. Ele monitora seus prazos ativos e gera banners automáticos de alerta no topo da tela quando a data limite for hoje ou amanhã (ou já estiver vencida).</div>
+                
+                <div class="view-data"><i class="fas fa-circle-info"></i> Como usar</div>
+                <div class="view-sobre">Clique em <span class="highlight">+ Data</span>. Digite apenas os números sequenciais (ex: 1505) e o sistema fará a formatação automática para <b>15/05</b>. Prazos vencidos ficam destacados em vermelho.</div>
+            </div>
+
+            <div class="item-group">
+                <div class="view-titulo"><i class="fas fa-square-check"></i> Bloco de Checklist</div>
+                <div class="view-data"><i class="fas fa-list-check"></i> O que é</div>
+                <div class="view-sobre">Uma lista com caixas de seleção reais, ideal para dividir uma tarefa em etapas. O grupo mostra automaticamente o progresso, como <b>3/5 concluídos</b>.</div>
+                
+                <div class="view-data"><i class="fas fa-circle-info"></i> Como usar</div>
+                <div class="view-sobre">No modo edição, clique em <span class="highlight">+ Checklist</span> e escreva um item por linha. Fora do modo edição, basta tocar em cada item para marcar ou desmarcar como concluído.</div>
+            </div>
+
+            <div class="item-group">
+                <div class="view-titulo"><i class="fas fa-star"></i> Favoritos e Fixar</div>
+                <div class="view-data" style="color: #ffd54f; border-color: rgba(255, 213, 79, 0.25);"><i class="fas fa-thumbtack"></i> O que são</div>
+                <div class="view-sobre">Duas formas de destacar um grupo importante: <span class="highlight">⭐ Favoritar</span> reúne o grupo automaticamente na aba <b>Favoritos</b> (disponível ao lado das categorias), e <span class="highlight">📌 Fixar</span> mantém o grupo sempre no topo da categoria onde ele está.</div>
+                
+                <div class="view-data"><i class="fas fa-circle-info"></i> Como usar</div>
+                <div class="view-sobre">No topo de cada grupo, use os ícones de estrela e de alfinete para ativar ou desativar essas marcações a qualquer momento.</div>
+            </div>
+
+            <div class="item-group">
+                <div class="view-titulo"><i class="fas fa-tag"></i> Tags</div>
+                <div class="view-data"><i class="fas fa-hashtag"></i> O que são</div>
+                <div class="view-sobre">Etiquetas curtas (como <span class="highlight">#Importante</span>, <span class="highlight">#Escola</span> ou <span class="highlight">#Roblox</span>) que ajudam a classificar e encontrar grupos rapidamente, mesmo entre categorias diferentes.</div>
+                
+                <div class="view-data"><i class="fas fa-circle-info"></i> Como usar</div>
+                <div class="view-sobre">Clique no ícone de etiqueta (<i class="fas fa-tag"></i>) no topo do grupo e digite as tags separadas por vírgula. Elas também são consideradas na barra de pesquisa.</div>
+            </div>
+
+            <div class="item-group">
+                <div class="view-titulo"><i class="fas fa-palette"></i> Categorias com Ícone e Cor</div>
+                <div class="view-data"><i class="fas fa-shapes"></i> O que é</div>
+                <div class="view-sobre">Cada categoria pode ter seu próprio emoji e cor de destaque, facilitando a identificação visual — por exemplo 📚 Estudos, 💼 Trabalho ou 🎮 Jogos, cada uma com uma cor diferente na aba ativa.</div>
+                
+                <div class="view-data"><i class="fas fa-circle-info"></i> Como usar</div>
+                <div class="view-sobre">Ao clicar em <span class="highlight">+</span> para criar uma categoria, preencha o nome, escolha um emoji e selecione uma cor antes de confirmar.</div>
+            </div>
+
+            <div class="item-group">
+                <div class="view-titulo"><i class="fas fa-filter"></i> Filtros</div>
+                <div class="view-data"><i class="fas fa-sliders"></i> O que são</div>
+                <div class="view-sobre">Chips de filtro rápido logo acima das categorias: <span class="highlight">Todos</span>, <span class="highlight">Vencidos</span>, <span class="highlight">Hoje</span>, <span class="highlight">Esta semana</span> e <span class="highlight">Favoritos</span>.</div>
+                
+                <div class="view-data"><i class="fas fa-circle-info"></i> Como usar</div>
+                <div class="view-sobre">Toque em um filtro para exibir apenas os grupos que se encaixam nele dentro da categoria atual. Toque em <b>Todos</b> para voltar a ver tudo.</div>
+            </div>
+
+            <div class="item-group">
+                <div class="view-titulo"><i class="fa-regular fa-bell"></i> Notificações Reais</div>
+                <div class="view-data"><i class="fas fa-bell-concierge"></i> O que é</div>
+                <div class="view-sobre">Além do banner de alerta dentro do painel, o sistema pode enviar uma notificação real do navegador quando houver um prazo para hoje ou amanhã — mesmo com a aba fechada, quando o navegador permitir.</div>
+                
+                <div class="view-data"><i class="fas fa-circle-info"></i> Como usar</div>
+                <div class="view-sobre">Vá em <span class="highlight">⚙️ Configurações</span> e clique em <b>Ativar</b> na linha de notificações. Autorize a permissão que o navegador solicitar.</div>
+            </div>
+
+            <div class="item-group">
+                <div class="view-titulo"><i class="fa-regular fa-calendar-days"></i> Calendário Mensal</div>
+                <div class="view-data"><i class="fas fa-table-cells"></i> O que é</div>
+                <div class="view-sobre">Uma visão de calendário com todos os prazos do mês marcados por um pontinho — vermelho quando já venceu, colorido quando ainda está no prazo.</div>
+                
+                <div class="view-data"><i class="fas fa-circle-info"></i> Como usar</div>
+                <div class="view-sobre">Clique no ícone de calendário (<i class="fa-regular fa-calendar-days"></i>) no cabeçalho. Use as setas para trocar de mês e toque em um dia para ver quais grupos vencem nele.</div>
+            </div>
+
+            <div class="item-group">
+                <div class="view-titulo"><i class="fas fa-chart-simple"></i> Estatísticas</div>
+                <div class="view-data"><i class="fas fa-square-poll-vertical"></i> O que é</div>
+                <div class="view-sobre">Um resumo rápido do seu painel: quantos grupos existem, quantos favoritos, quantas tarefas de checklist já foram concluídas e quantos prazos estão vencidos.</div>
+                
+                <div class="view-data"><i class="fas fa-circle-info"></i> Como usar</div>
+                <div class="view-sobre">Clique no ícone de gráfico (<i class="fas fa-chart-simple"></i>) no cabeçalho para abrir o painel de estatísticas a qualquer momento.</div>
+            </div>
+
+            <div class="item-group">
+                <div class="view-titulo"><i class="fas fa-lock"></i> Segurança com PIN</div>
+                <div class="view-data" style="color: var(--error-color); border-color: rgba(207, 102, 121, 0.25);"><i class="fas fa-shield-halved"></i> O que é</div>
+                <div class="view-sobre">Uma proteção opcional por PIN numérico (4 a 8 dígitos) que bloqueia o acesso ao painel até a senha correta ser digitada.</div>
+                
+                <div class="view-data"><i class="fas fa-circle-info"></i> Como usar</div>
+                <div class="view-sobre">Em <span class="highlight">⚙️ Configurações</span>, clique em <b>Definir PIN</b> e escolha sua senha. Para remover a proteção, clique em <b>Remover PIN</b> e confirme com o PIN atual.</div>
+            </div>
+
+            <div class="item-group">
+                <div class="view-titulo"><i class="fas fa-file-export"></i> Exportar e Importar</div>
+                <div class="view-data"><i class="fas fa-database"></i> O que é</div>
+                <div class="view-sobre">Um backup completo do seu painel em um arquivo <b>.json</b>, que pode ser guardado e restaurado depois — útil para trocar de aparelho ou evitar perda de dados.</div>
+                
+                <div class="view-data"><i class="fas fa-circle-info"></i> Como usar</div>
+                <div class="view-sobre">Em <span class="highlight">⚙️ Configurações</span>, use <b>Baixar .json</b> para exportar, ou selecione um arquivo em <b>Importar dados</b> para restaurar (isso substitui os dados atuais).</div>
+            </div>
+
+            <div class="item-group">
+                <div class="view-titulo"><i class="fas fa-rotate-left"></i> Desfazer e Refazer</div>
+                <div class="view-data"><i class="fas fa-clock-rotate-left"></i> O que é</div>
+                <div class="view-sobre">Um histórico de ações que permite reverter alterações recentes na estrutura do painel, como exclusões ou edições feitas por engano.</div>
+                
+                <div class="view-data"><i class="fas fa-circle-info"></i> Como usar</div>
+                <div class="view-sobre">Use os atalhos de teclado <b>Ctrl+Z</b> (desfazer) e <b>Ctrl+Y</b> (refazer), ou os ícones de seta circular (<i class="fas fa-rotate-left"></i> / <i class="fas fa-rotate-right"></i>) no cabeçalho.</div>
+            </div>
+
+        </div>
+
+        <div class="category-header" style="margin-top: 20px;">
+            <h2><i class="fas fa-robot"></i> Assistente IA</h2>
+        </div>
+
+        <div class="content-area">
+            
+            <div class="item-group">
+                <div class="view-titulo"><i class="fa-regular fa-comments"></i> Múltiplos Chats</div>
+                <div class="view-data"><i class="fas fa-folder-open"></i> Organização</div>
+                <div class="view-sobre">Acesso a um menu lateral dedicado onde todas as suas conversas anteriores ficam armazenadas por disciplina, evitando a mistura de assuntos.</div>
+                
+                <div class="view-data"><i class="fas fa-circle-info"></i> Como usar</div>
+                <div class="view-sobre">Abra o menu lateral utilizando o ícone <b>☰</b> e clique em <span class="highlight">+ Novo Chat</span>. Você também pode fixar (📌) as matérias mais importantes no topo da lista.</div>
+            </div>
+
+            <div class="item-group">
+                <div class="view-titulo"><i class="fas fa-bolt"></i> Ações Rápidas</div>
+                <div class="view-data"><i class="fas fa-screwdriver-wrench"></i> Atalhos</div>
+                <div class="view-sobre">Ao passar o mouse ou tocar sobre os balões de mensagem no chat, você revela ferramentas rápidas para manipular os textos enviados e recebidos.</div>
+                
+                <div class="view-data"><i class="fas fa-circle-info"></i> Como usar</div>
+                <div class="view-sobre">Use <span class="highlight">✏️ Editar</span> para corrigir comandos já enviados, <span class="highlight">📋 Copiar</span> para salvar respostas da IA na área de transferência ou <span class="highlight">📌 Fixar Texto</span> para dar contextos permanentes.</div>
+            </div>
+
+            <div class="item-group">
+                <div class="view-titulo"><i class="fas fa-sliders"></i> Personalização</div>
+                <div class="view-data"><i class="fas fa-masks-theater"></i> Identidade</div>
+                <div class="view-sobre">Configuração avançada que dita diretamente a forma de agir, o tom de voz e o nível de complexidade das explicações da sua tutora virtual.</div>
+                
+                <div class="view-data"><i class="fas fa-circle-info"></i> Como usar</div>
+                <div class="view-sobre">Acesse as <span class="highlight">⚙️ Configurações</span> na janela do chat para alterar os codinomes e preencher as instruções customizadas na caixa de <i>"Personalidade"</i>.</div>
+            </div>
+
+            <div class="item-group">
+                <div class="view-titulo"><i class="fas fa-brain"></i> Integração Total</div>
+                <div class="view-data" style="color: var(--secondary-color); border-color: rgba(3, 218, 198, 0.2);"><i class="fas fa-link"></i> Sincronia de Dados</div>
+                <div class="view-sobre">A IA possui uma memória contextual conectada aos seus cartões modulares, permitindo a leitura dinâmica dos seus prazos vigentes de estudo.</div>
+                
+                <div class="view-data"><i class="fas fa-circle-info"></i> Como usar</div>
+                <div class="view-sobre">Envie comandos diretos como: <i>"Quais são meus trabalhos pendentes?"</i>. A inteligência varrerá suas categorias, gerando um resumo detalhado e atalhos rápidos.</div>
+            </div>
+
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 20px;">
+            <a href="index.html" class="btn-action-hub">
+                <i class="fas fa-arrow-left"></i> Voltar ao Painel
+            </a>
+            <a href="ia.html" class="btn-action-hub btn-primary-hub">
+                Conversar com a IA <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+
+    </div>
+
+    <script>
+        // --- FUNÇÃO PARA APLICAR O TEMA E A COR ENCONTRADOS ---
+        function applySavedTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-mode');
+            } else {
+                document.body.classList.remove('light-mode');
+            }
+        }
+
+        function applySavedColor() {
+            const savedColor = localStorage.getItem('custom_color');
+            if (savedColor) {
+                document.documentElement.style.setProperty('--primary-color', savedColor);
+            } else {
+                document.documentElement.style.removeProperty('--primary-color');
+            }
+        }
+
+        // 1. Executa imediatamente ao carregar a página do tutorial
+        applySavedTheme();
+        applySavedColor();
+
+        // 2. Ouvinte (Listener) Global: se o usuário alterar o tema ou a cor lá na engrenagem do
+        // painel index.html, esta aba do tutorial atualiza o visual em tempo real sem precisar de F5
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'theme') applySavedTheme();
+            if (event.key === 'custom_color') applySavedColor();
+        });
+    </script>
+</body>
+</html>
+
